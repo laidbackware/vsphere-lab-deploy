@@ -13,8 +13,8 @@
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
         vm_id: "{{ item.key }}"
-        vm_username: root
-        vm_password: VMware1!
+        vm_username: '{{ nestedESX.user }}'
+        vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
         vm_shell_args: "system hostname set --fqdn={{ item.key }}.{{ domain }}"
         vm_shell_env:
@@ -40,8 +40,8 @@
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
         vm_id: "{{ item.key }}"
-        vm_username: root
-        vm_password: VMware1!
+        vm_username: '{{ nestedESX.user }}'
+        vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
         vm_shell_args: "network vswitch standard portgroup set --portgroup-name='Management Network' --vlan-id={{ item.value.vlan }}"
         vm_shell_env: 
@@ -67,8 +67,8 @@
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
         vm_id: "{{ item.key }}"
-        vm_username: root
-        vm_password: VMware1!
+        vm_username: '{{ nestedESX.user }}'
+        vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
         vm_shell_args: "network ip interface ipv4 set --interface-name=vmk0 --ipv4={{ item.value.ip }} --netmask={{ item.value.mask }} --type=static"
         vm_shell_env: 
@@ -94,8 +94,8 @@
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
         vm_id: "{{ item.key }}"
-        vm_username: root
-        vm_password: VMware1!
+        vm_username: '{{ nestedESX.user }}'
+        vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcfg-route
         vm_shell_args: " -a default {{ item.value.gw }}"
         vm_shell_env: 
@@ -121,8 +121,8 @@
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
         vm_id: "{{ item.key }}"
-        vm_username: root
-        vm_password: VMware1!
+        vm_username: '{{ nestedESX.user }}'
+        vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
         vm_shell_args: "network ip dns search add --domain={{ domain}}"
         vm_shell_env: 
@@ -148,8 +148,8 @@
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
         vm_id: "{{ item.key }}"
-        vm_username: root
-        vm_password: VMware1!
+        vm_username: '{{ nestedESX.user }}'
+        vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
         vm_shell_args: "network ip dns server add --server={{ dns1 }}"
         vm_shell_env: 
@@ -168,8 +168,8 @@
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
         vm_id: "{{ item.key }}"
-        vm_username: root
-        vm_password: VMware1!
+        vm_username: '{{ nestedESX.user }}'
+        vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/vim-cmd
         vm_shell_args: "hostsvc/advopt/update UserVars.SuppressShellWarning long 1"
         vm_shell_env: 
@@ -196,8 +196,8 @@
         validate_certs: false
         cluster_name: "{{ item.value.cluster }}"
         esxi_hostname: "{{ item.value.ip }}"
-        esxi_username: "root"
-        esxi_password: "VMware1!"
+        esxi_username: "'{{ nestedESX.user }}'"
+        esxi_password: "'{{ nestedESX.password }}'"
         state: present
       with_dict: "{{ vESX }}"
 

@@ -1,0 +1,42 @@
+---
+- name: Customize vESX Hosts
+  hosts: localhost
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Add a VMware vSwitch
+      vmware_vswitch:
+        hostname: '{{ item.value.ip }}'
+        username: '{{ nestedESX.user }}'
+        password: '{{ nestedESX.password }}'   
+        validate_certs: False
+        switch: 'vSwitch1'
+        nics: 'vmnic1'
+        mtu: 1600
+      with_dict: "{{ vESX }}"
+      delegate_to: localhost
+      
+    - name: Add Management Network VM Portgroup to all hosts in a cluster
+      vmware_portgroup:
+        hostname: "{{ vcenter.ip }}"
+        username: "{{ vcenter.user }}"
+        password: "{{ vcenter.password }}"
+        validate_certs: False
+        cluster_name: "Compute"
+        switch_name: 'vSwitch1'
+        portgroup_name: 'TEP_PG'
+        vlan_id: 0
+      delegate_to: localhost
+      
+    - name: Add Management Network VM Portgroup to all hosts in a cluster
+      vmware_portgroup:
+        hostname: "{{ vcenter.ip }}"
+        username: "{{ vcenter.user }}"
+        password: "{{ vcenter.password }}"
+        validate_certs: False
+        cluster_name: "Compute"
+        switch_name: 'vSwitch0'
+        portgroup_name: 'Net1'
+        vlan_id: 0
+      delegate_to: localhost

@@ -1,7 +1,7 @@
 ---
-- include: playbooks/preparePhysicalESXi.yml
+#- include: playbooks/preparePhysicalESXi.yml
 - include: playbooks/deployVC.yml
-- include: playbooks/connectPESXtoVC.yml
+#- include: playbooks/connectPESXtoVC.yml
 - include: playbooks/prepareISOInstaller.yml
 - include: playbooks/deployNestedESXi.yml
 
@@ -15,6 +15,9 @@
       pause: minutes=5
       when: vESX|length > 5
 - include: playbooks/configureNestedESXi.yml
-- include: playbooks/createVDS.yml
+- include: playbooks/customize_esxi.yml
+#- include: playbooks/createVDS.yml
 
 
+#TODO fix vCenter deploy to not error
+#Fix ESXi to not 

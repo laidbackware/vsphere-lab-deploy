@@ -179,7 +179,7 @@ def wait_for_tasks(tasks):
         if pcfilter:
             pcfilter.Destroy()
 
-def create_vm(vmName, content, clusterName, datastore, portGroup, CPUs, memory, dataStorePath, hdd_size):
+def create_vm(vmName, content, clusterName, datastore, portGroup, CPUs, memory, dataStorePath, hdd_size, tep_portGroup):
     datacenter = content.rootFolder.childEntity[0]
     vmfolder = datacenter.vmFolder
     hosts = datacenter.hostFolder.childEntity
@@ -190,23 +190,23 @@ def create_vm(vmName, content, clusterName, datastore, portGroup, CPUs, memory, 
     dev_changes = []
     disk_size = 1
     new_disk_kb = int(disk_size) * 1024 * 1024 * hdd_size
-    disk_spec = create_virtual_disk(16777216, 0, 0, False)
-    disk_spec2 = create_virtual_disk(new_disk_kb/2, 0, 1, False)
-    disk_spec3 = create_virtual_disk(new_disk_kb, 0, 2, False)
+    disk_spec = create_virtual_disk(new_disk_kb, 0, 0, False)
+    #disk_spec2 = create_virtual_disk(new_disk_kb/2, 0, 1, False)
+    #disk_spec3 = create_virtual_disk(new_disk_kb, 0, 2, False)
 
     scsi_spec = add_scsi_controller()
     nic0_spec = createNIC(content, portGroup, False)
     nic1_spec = createNIC(content, portGroup, False)
     nic2_spec = createNIC(content, portGroup, False)
-    nic3_spec = createNIC(content, portGroup, False)
-    nic4_spec = createNIC(content, portGroup, False)
+    nic3_spec = createNIC(content, tep_portGroup, False) # 
+    nic4_spec = createNIC(content, tep_portGroup, False)
 
     cdrom = createCdrom(content, datastore, dataStorePath)
     dev_changes.append(cdrom)
     dev_changes.append(scsi_spec)
     dev_changes.append(disk_spec)
-    dev_changes.append(disk_spec2)
-    dev_changes.append(disk_spec3)
+    #dev_changes.append(disk_spec2)
+    #dev_changes.append(disk_spec3)
     dev_changes.append(nic0_spec)
     dev_changes.append(nic1_spec)
     dev_changes.append(nic2_spec)
@@ -249,6 +249,8 @@ def main():
             cluster=dict(required=True, type='str'),
             datastore=dict(required=True, type='str'),
             portgroup=dict(required=True, type='str'),
+			vmk_portgroup=dict(required=True, type='str'),
+			tep_portgroup=dict(required=True, type='str'),
             cpucount=dict(required=True, type='int'),
             memory=dict(required=True, type='int'),
             isopath=dict(required=True, type='str'),
@@ -269,7 +271,7 @@ def main():
 	return 0
     if module.check_mode:
         module.exit_json(changed=True, debug_out="Test Debug out, Yasen !!!")
-    result = create_vm(module.params['vmname'], content, module.params['cluster'], module.params['datastore'], module.params['portgroup'], module.params['cpucount'], module.params['memory'], module.params['isopath'], module.params['hdd'])
+    result = create_vm(module.params['vmname'], content, module.params['cluster'], module.params['datastore'], module.params['vmk_portgroup'], module.params['cpucount'], module.params['memory'], module.params['isopath'], module.params['hdd'], module.params['tep_portgroup'])
     if result != 0:
         module.fail_json(msg='Failed to deploy nested ESXi vm with name {}'.format(module.params['vmname']))
     module.exit_json(changed=True, result=module.params['vmname'] + " created")

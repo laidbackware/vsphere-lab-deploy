@@ -12,7 +12,7 @@
         "appliance": {
             "name": "{{ vcenter.name }}",
             "thin.disk.mode": true,
-            "deployment.option": "small"
+            "deployment.option": "tiny"
         },
         "network": {
             "ip.family": "ipv4",

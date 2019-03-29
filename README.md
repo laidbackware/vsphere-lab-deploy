@@ -1,6 +1,9 @@
 # vsphere-nsx-lab-deploy
 Ansible playbook to automate deployment of vCenter, nested ESXi hosts
 
+# Fork
+Cut down features to build 1 host with local disk and 3 networks for a single node NSX-T install of PKS.
+
 #### Table of Contents
 
 1. [Description](#description)
