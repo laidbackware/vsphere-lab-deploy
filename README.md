@@ -1,8 +1,14 @@
 # vsphere-nsx-lab-deploy
 Ansible playbook to automate deployment of vCenter, nested ESXi hosts
 
-# Fork
-Cut down features to build 1 host with local disk and 3 networks for a single node NSX-T install of PKS.
+## Fork Features
+Cut down features to build 1 host with local disk and 3 networks for a single node NSX-T install. Sped up with async tasks to build hosts and vCenter in parallel. Added support for vSphere 6.7. Switched to deploy the vCenter to another vCenter (may add ESXi host support back later). Remove options for external PSC topologies as EOL feature and removed 6.0 code.
+
+Validated on Ubuntu 16.04 with Ansible 2.7.
+
+## Fork Todo
+Fix vCenter tasks to not need to ignore errors.
+Check if ESXi hosts exist before building the ISO image and skip if no deployments.
 
 #### Table of Contents
 
@@ -25,7 +31,6 @@ Validated on Ubuntu 14 deploying vSphere 6.0 and vSphere 6.5
 ### Dependencies
 
 apt-get install sshpass python-pip git <br/>
-pip install vim <br/>
 pip install pyvmomi <br/>
 git clone https://github.com/yasensim/vsphere-nsx-lab-deploy.git <br/>
 
