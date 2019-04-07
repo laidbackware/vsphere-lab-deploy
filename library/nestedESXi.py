@@ -179,7 +179,7 @@ def wait_for_tasks(tasks):
         if pcfilter:
             pcfilter.Destroy()
 
-def create_vm(vmName, content, clusterName, datastore, portGroup, CPUs, memory, dataStorePath, hdd_size, tep_portGroup):
+def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memory, dataStorePath, hdd_size, tep_portGroup):
     datacenter = content.rootFolder.childEntity[0]
     vmfolder = datacenter.vmFolder
     hosts = datacenter.hostFolder.childEntity
@@ -195,11 +195,11 @@ def create_vm(vmName, content, clusterName, datastore, portGroup, CPUs, memory, 
     #disk_spec3 = create_virtual_disk(new_disk_kb, 0, 2, False)
 
     scsi_spec = add_scsi_controller()
-    nic0_spec = createNIC(content, portGroup, False)
-    nic1_spec = createNIC(content, portGroup, False)
-    nic2_spec = createNIC(content, portGroup, False)
-    nic3_spec = createNIC(content, tep_portGroup, False) # 
-    nic4_spec = createNIC(content, tep_portGroup, False)
+    nic0_spec = createNIC(content, vmk_portgroup, False)
+    nic1_spec = createNIC(content, tep_portGroup, False)
+    nic2_spec = createNIC(content, tep_portGroup, False)
+    #nic3_spec = createNIC(content, tep_portGroup, False) # 
+    #nic4_spec = createNIC(content, tep_portGroup, False)
 
     cdrom = createCdrom(content, datastore, dataStorePath)
     dev_changes.append(cdrom)
@@ -210,8 +210,8 @@ def create_vm(vmName, content, clusterName, datastore, portGroup, CPUs, memory, 
     dev_changes.append(nic0_spec)
     dev_changes.append(nic1_spec)
     dev_changes.append(nic2_spec)
-    dev_changes.append(nic3_spec)
-    dev_changes.append(nic4_spec)
+    #dev_changes.append(nic3_spec)
+    #dev_changes.append(nic4_spec)
 
     config = vim.vm.ConfigSpec(
                               name=vmName,
@@ -248,7 +248,6 @@ def main():
             vcenter_passwd=dict(required=True, type='str', no_log=True),
             cluster=dict(required=True, type='str'),
             datastore=dict(required=True, type='str'),
-            portgroup=dict(required=True, type='str'),
 			vmk_portgroup=dict(required=True, type='str'),
 			tep_portgroup=dict(required=True, type='str'),
             cpucount=dict(required=True, type='int'),

@@ -1,9 +1,12 @@
 # path to the ESXi Installer ISO
-esxIso: '/root/ISOs/ESXi-6.5.0-20190104001.iso'
-#esxIso: '/root/ISOs/VMware-VMvisor-Installer-6.5.0-4887370.x86_64.iso'
+# esxIso: '/home/ubuntu/ISOs/ESXi-6.5.0-20190104001.iso'
+esxIso: '/home/ubuntu/ISOs/ESXi670-201903001.iso'
 # path to vCenter installer ISO
-vcIso: '/root/ISOs/VMware-VCSA-all-6.5.0-10964411.iso'
-#vcIso: '/root/ISOs/VMware-VCSA-all-6.5.0-5178943.iso'
+# vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.5.0-10964411.iso'
+vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.7.0-11726888.iso'
+
+
+environment_tag: 'PKS-LAB1' # Used to name objects.... Maybe
 
 nestedESX:
   user: 'root' 
@@ -13,25 +16,25 @@ nestedESX:
 physicalESX:
   host: '192.168.0.150' 
   user: 'root' 
-  password: 'VMware1!' 
+  password: 'Pass123$' 
   vlan: 0
   vswitch: vSwitch0
 
-# the vCenter appliance that need to be deployed
+# the vCenter appliance that needs to be deployed
 vcenter:
   ip: '192.168.0.181' # vCenter ip address 
   mask: '24'
   gw: '192.168.0.1'
   network: 'Nest' # this portGroup will be created on the pESX with the vlan id specified in the physicalESX section
-  name: '192.168.0.181' # FQDN if there is working DNS server, otherwise put the ip as a name
-  psc_name: '192.168.0.181' # if psc_name is the same as name above and psc_ip is the same as ip above, it will be vCenter with embeded PSC.
-  psc_ip: '192.168.0.181' # just change the name and ip address for the PSC if you want external PSC to be deployed.
+  host_name: '192.168.0.181' # FQDN if there is working DNS server, otherwise put the ip as a name
+  vm_name: 'nsxt-lab1-vc' # FQDN if there is working DNS server, otherwise put the ip as a name
   thin: 'true'
   user: 'administrator@vsphere.local' 
-  password: 'VMware1!' 
+  password: 'Pass123$' 
   datacenter: 'Lab' 
   datastore: 'SSD' # Datastore name where the nested ESXi VMs will be deployed
   domain: 'vsphere.local'
+
 # if there is existing VC connected to the physical ESXi change the configuration here. If there is no existing VC the config must be the same as the vcenter section above
 vc_mng:
   ip: '192.168.0.113' # if you have existing VC already deployed and connected to the physical ESX put the ip address here, otherwise it must be the same as the parameters in vcenter section above
@@ -40,7 +43,7 @@ vc_mng:
   network: 'Net1'
   name: '192.168.0.113' # if you have existing VC already deployed and connected to the physical ESX put the existing VC VM name here, otherwise it must be the same as the parameters in vcenter section above
   user: 'administrator@vsphere.local' 
-  password: 'VMware1!' 
+  password: 'Pass123$' 
   datacenter: 'Home' 
   datastore: 'SSD'
   domain: 'vsphere.local'
@@ -69,7 +72,7 @@ vsan_gw: 172.16.123.250
 
 # You can add, remove or rename the nested ESXi below, in this example the names will be esx1, esx2, etc ...
 vESX:
-  esx1:
+  nsxt-lab1-esx1:
     ip: 192.168.0.182
     mask: 255.255.255.0
     gw: 192.168.0.1

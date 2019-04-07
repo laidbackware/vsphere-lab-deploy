@@ -196,8 +196,8 @@
         validate_certs: false
         cluster_name: "{{ item.value.cluster }}"
         esxi_hostname: "{{ item.value.ip }}"
-        esxi_username: "'{{ nestedESX.user }}'"
-        esxi_password: "'{{ nestedESX.password }}'"
+        esxi_username: "{{ nestedESX.user }}"
+        esxi_password: "{{ nestedESX.password }}"
         state: present
       with_dict: "{{ vESX }}"
 

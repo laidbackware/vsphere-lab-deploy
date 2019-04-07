@@ -10,7 +10,7 @@
             "deployment.network": "{{ vcenter.network }}"
         },
         "appliance": {
-            "name": "{{ vcenter.name }}",
+            "name": "{{ vcenter.vm_name }}",
             "thin.disk.mode": true,
             "deployment.option": "tiny"
         },
@@ -23,7 +23,7 @@
                 "{{ dns2 }}"
             ],
 
-            "system.name": "{{ vcenter.name }}",
+            "system.name": "{{ vcenter.host_name }}",
             "gateway": "{{ vcenter.gw }}",
             "prefix": "{{ vcenter.mask }}"
         },

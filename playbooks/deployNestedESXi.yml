@@ -24,6 +24,7 @@
       async: 7200
       poll: 0
       register: deployment
+
     - name: Wait 3 seconds before start checking wheter the hosts are ready
       pause: seconds=3
     - name: Result check for deployment
@@ -37,7 +38,7 @@
       with_items: "{{ job_result.results }}"
     - stat: path=/tmp/newESXi
       register: newESXi
-    - name: Wait 15 minutes before start checking wheter the hosts are ready
+    - name: Wait 15 minutes before start checking whether the hosts are ready
       pause: minutes=15
       when: newESXi.stat.exists == True
     - name: Delete the temporary mark
