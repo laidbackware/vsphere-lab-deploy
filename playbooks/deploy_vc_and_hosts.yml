@@ -5,20 +5,43 @@
   vars_files:
     - ../answerfile.yml
   tasks:
+    - name: Check if vCenter already exists so install steps can be skipped
+      command: "curl -k --silent -v https://{{ vcenter.ip }}/ui/ --max-time 3"
+      register: result
+      ignore_errors: True
+    - set_fact:
+        vcenter_exists={{result.stdout.find("<title>vSphere Client</title>") != -1}}
+
     - name: Mount VC installer
       action: mount name='/mnt/VCSA' src="{{ vcIso }}" opts=loop fstype=iso9660 state=mounted
       tags: mount
-
+      when: not vcenter_exists
     - name: Create JSON template file for VCSA 6.5 with embeded PSC
       template: 
-        src=../templates/vCSA65_on_ESXi.json
+        src=../templates/embedded_vCSA_on_VC_6.5.json
         dest=/tmp/vCSA_on_ESXi.json
+      when: vcIso | search("-6.5.") and not vcenter_exists
+    - name: Create JSON template file for VCSA 6.7 with embeded PSC
+      template: 
+        src=../templates/embedded_vCSA_on_VC_6.7.json
+        dest=/tmp/vCSA_on_ESXi.json
+      when: vcIso | search("-6.7.") and not vcenter_exists
+
+    - name: Perform VC CLI Install
+      command: "./vcsa-deploy install --accept-eula --no-esx-ssl-verify /tmp/vCSA_on_ESXi.json"
+      args:
+        chdir: /mnt/VCSA/vcsa-cli-installer/lin64/
+      when: not vcenter_exists
+      ignore_errors: True
+      async: 3600
+      poll: 0
+      register: vcenter_result
     
     - name: Deploy Nested vESXi VMs
       nestedESXi:
         vcenter: "{{ vc_mng.ip }}"
-        vmname: "{{ item.key }}"
-        vcenter_user: "{{ vc_mng.user }}"
+        vmname: "{{ environment_tag }}-{{ item.key }}"
+        vcenter_user: "{{ vc_mng.user }}" 
         vcenter_passwd: "{{ vc_mng.password }}" 
         cluster: "{{ item.value.mng_cluster }}"
         datastore: "{{ vc_mng.datastore }}" # Datastore on physical where
@@ -32,47 +55,8 @@
       async: 7200
       poll: 0
       register: hosts
-
-    # To avoid failures, check for VM existing with name and continue if exists.
-
-    - name: Perform VC CLI Install 65
-      command: "./vcsa-deploy install --accept-eula --no-esx-ssl-verify /tmp/vCSA_on_ESXi.json"
-      args:
-        chdir: /mnt/VCSA/vcsa-cli-installer/lin64/
-      when: vcIso | search("-6.5.")
-      ignore_errors: True
-      async: 3600
-      poll: 0
-      register: vcenter_result
-
-
-
     - name: Wait 3 seconds before start checking wheter the hosts are ready
       pause: seconds=3
-    # - name: Result check for deployment
-    #   async_status:
-    #     jid: "{{ item.ansible_job_id }}"
-    #   register: job_result
-    #   with_items: "{{ hosts.results }}"
-    #   set_fact:
-    #     new_deployment : false
-    # - name: Set fact if there is a new vESX to deploy
-    #   set_fact:
-    #     new_deployment : true
-    #   when: item.stat is not defined
-
-    # - name: Create a mark if there is a new vESX to deploy
-    #   file: path=/tmp/newESXi state=touch owner=root group=root mode=0555
-    #   when: item.stat is not defined
-    #   with_items: "{{ job_result.results }}"
-    # - stat: path=/tmp/newESXi
-    #   register: newESXi
-
-    # - name: Wait 5 minutes before start checking whether the hosts are ready
-    #   pause: minutes=5
-    #   when: new_deployment
-    # - name: Delete the temporary mark
-    #   file: path=/tmp/newESXi state=absent
 
     - name: Result check for deployment of host
       async_status:
@@ -81,35 +65,34 @@
       until: job_result.finished
       with_items: "{{ hosts.results }}"
       retries: 100
-      delay: 10
+      delay: 15
 
-    - debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{vcenter.ip}}:5480"
-
+    - debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under /tmp and follow vcsa-cli-installer.log "
+      when: not vcenter_exists
     - name: Result check for deployment of vCenter task
       async_status:
         jid: "{{ vcenter_result.ansible_job_id }}"
       register: job_result
       until: job_result.finished
-      with_items: "{{ vcenter_result }}"
-      ignore_errors: True
-      retries: 100
-      delay: 10
-    
+      # with_items: "{{ vcenter_result }}"
+      ignore_errors: True # This needs to be fixed. The task finishes, but Ansible recoginzes it as failed.
+      retries: 240
+      delay: 15
+      when: not vcenter_exists
     - name: Check the vSphere API is online
-      command: "curl -k --silent -v https://{{ vc_mng.ip }}/ui/"
+      command: "curl -k --silent -v https://{{ vcenter.ip }}/ui/"
       register: result
       until: result.stdout.find("<title>vSphere Client</title>") != -1
       retries: 120
       delay: 5
       changed_when: false
-    
-    - name: Wait 30 seconds for the API to settle
+      when: not vcenter_exists
+    - name: Wait 30 seconds for the vCenter to settle
       pause: seconds=30
+      when: not vcenter_exists
 
     - name: Unmount VCSA installer
       action: mount name='/mnt/VCSA' src="{{ esxIso }}" fstype=iso9660 state=absent
-      ignore_errors: True
-    
     - name: Delete the temporary JSON template file
       file: path=/tmp/vCSA_on_ESXi.json state=absent
     

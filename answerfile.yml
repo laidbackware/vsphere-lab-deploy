@@ -1,56 +1,54 @@
 # path to the ESXi Installer ISO
-# esxIso: '/home/ubuntu/ISOs/ESXi-6.5.0-20190104001.iso'
-esxIso: '/home/ubuntu/ISOs/ESXi670-201903001.iso'
+esxIso: '/home/ubuntu/ISOs/ESXi-6.5.0-20190104001.iso'
+# esxIso: '/home/ubuntu/ISOs/ESXi670-201903001.iso'
 # path to vCenter installer ISO
-# vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.5.0-10964411.iso'
-vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.7.0-11726888.iso'
+vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.5.0-10964411.iso'
+# vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.7.0-11726888.iso'
 
 
-environment_tag: 'PKS-LAB1' # Used to name objects.... Maybe
+environment_tag: 'nsxt-lab1' # Used to name objects.... Maybe
+dns1: '192.168.0.110'
+dns2: '192.168.0.1'
+domain: 'home.local'
 
 nestedESX:
   user: 'root' 
   password: 'VMware1!' 
 
 # configuration for accessing the existing physical ESXi
-physicalESX:
-  host: '192.168.0.150' 
-  user: 'root' 
-  password: 'Pass123$' 
-  vlan: 0
-  vswitch: vSwitch0
+# physicalESX:
+#   host: '192.168.0.150' 
+#   user: 'root' 
+#   password: 'Pass123$' 
+#   vlan: 0
+#   vswitch: vSwitch0
 
-# the vCenter appliance that needs to be deployed
-vcenter:
+
+vcenter: # the vCenter appliance that needs to be deployed
   ip: '192.168.0.181' # vCenter ip address 
   mask: '24'
   gw: '192.168.0.1'
   network: 'Nest' # this portGroup will be created on the pESX with the vlan id specified in the physicalESX section
   host_name: '192.168.0.181' # FQDN if there is working DNS server, otherwise put the ip as a name
-  vm_name: 'nsxt-lab1-vc' # FQDN if there is working DNS server, otherwise put the ip as a name
-  thin: 'true'
+  thin: true
   user: 'administrator@vsphere.local' 
   password: 'Pass123$' 
-  datacenter: 'Lab' 
-  datastore: 'SSD' # Datastore name where the nested ESXi VMs will be deployed
-  domain: 'vsphere.local'
+  sso_domain: 'vsphere.local'
+  datacenter: 'Lab' # DC to create after deployment
+  datastore: 'SSD' # Datastore name where the vCenter VM will be deployed
+  cluster : 'Physical' # Cluster to deploy VM to
 
-# if there is existing VC connected to the physical ESXi change the configuration here. If there is no existing VC the config must be the same as the vcenter section above
-vc_mng:
+vc_mng: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
   ip: '192.168.0.113' # if you have existing VC already deployed and connected to the physical ESX put the ip address here, otherwise it must be the same as the parameters in vcenter section above
-  mask: '24'
-  gw: '192.168.0.1'
-  network: 'Net1'
-  name: '192.168.0.113' # if you have existing VC already deployed and connected to the physical ESX put the existing VC VM name here, otherwise it must be the same as the parameters in vcenter section above
   user: 'administrator@vsphere.local' 
   password: 'Pass123$' 
-  datacenter: 'Home' 
-  datastore: 'SSD'
-  domain: 'vsphere.local'
-
-dns1: '192.168.0.113'
-dns2: '192.168.0.1'
-domain: 'home.local'
+  datacenter: 'Home' # DC deploy all VMs to
+  datastore: 'SSD' # Datastore used to for nested ESXi hosts
+  # name: '192.168.0.113' # if you have existing VC already deployed and connected to the physical ESX put the existing VC VM name here, otherwise it must be the same as the parameters in vcenter section above
+  # mask: '24'
+  # gw: '192.168.0.1'
+  # domain: 'vsphere.local'
+  # network: 'Net1'
 
 clusters: # You can add, remove or rename clusters in this section, you can specify to which cluster specific nested ESXi to be connected to
 # Do not change ha and vsan to True untill I fix a bug. It is better to go and enable first vSAN and HA after the deployment is done
@@ -58,7 +56,6 @@ clusters: # You can add, remove or rename clusters in this section, you can spec
     ha: False
     drs: True
     vsan: False
-
 
 # vMotion vlan and network, no need to be reachible, you can configure random values here
 vmotion_vlan: 999
@@ -72,7 +69,7 @@ vsan_gw: 172.16.123.250
 
 # You can add, remove or rename the nested ESXi below, in this example the names will be esx1, esx2, etc ...
 vESX:
-  nsxt-lab1-esx1:
+  esx1: # environment_tag will prepend the name
     ip: 192.168.0.182
     mask: 255.255.255.0
     gw: 192.168.0.1

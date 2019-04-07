@@ -12,11 +12,11 @@
         password: "{{ vc_mng.password }}"
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
-        vm_id: "{{ item.key }}"
+        vm_id: "{{ environment_tag }}-{{ item.key }}"
         vm_username: '{{ nestedESX.user }}'
         vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
-        vm_shell_args: "system hostname set --fqdn={{ item.key }}.{{ domain }}"
+        vm_shell_args: "system hostname set --fqdn={{ environment_tag }}-{{ item.key }}.{{ domain }}"
         vm_shell_env:
         - "PATH=/bin"
         - "VAR=test"
@@ -39,7 +39,7 @@
         password: "{{ vc_mng.password }}"
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
-        vm_id: "{{ item.key }}"
+        vm_id: "{{ environment_tag }}-{{ item.key }}"
         vm_username: '{{ nestedESX.user }}'
         vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
@@ -66,7 +66,7 @@
         password: "{{ vc_mng.password }}"
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
-        vm_id: "{{ item.key }}"
+        vm_id: "{{ environment_tag }}-{{ item.key }}"
         vm_username: '{{ nestedESX.user }}'
         vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
@@ -93,7 +93,7 @@
         password: "{{ vc_mng.password }}"
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
-        vm_id: "{{ item.key }}"
+        vm_id: "{{ environment_tag }}-{{ item.key }}"
         vm_username: '{{ nestedESX.user }}'
         vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcfg-route
@@ -120,7 +120,7 @@
         password: "{{ vc_mng.password }}"
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
-        vm_id: "{{ item.key }}"
+        vm_id: "{{ environment_tag }}-{{ item.key }}"
         vm_username: '{{ nestedESX.user }}'
         vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
@@ -147,7 +147,7 @@
         password: "{{ vc_mng.password }}"
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
-        vm_id: "{{ item.key }}"
+        vm_id: "{{ environment_tag }}-{{ item.key }}"
         vm_username: '{{ nestedESX.user }}'
         vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/esxcli
@@ -167,7 +167,7 @@
         password: "{{ vc_mng.password }}"
         datacenter: "{{ vc_mng.datacenter }}"
         validate_certs: false
-        vm_id: "{{ item.key }}"
+        vm_id: "{{ environment_tag }}-{{ item.key }}"
         vm_username: '{{ nestedESX.user }}'
         vm_password: '{{ nestedESX.password }}'
         vm_shell: /bin/vim-cmd
