@@ -1,9 +1,9 @@
 # path to the ESXi Installer ISO
-esxIso: '/home/ubuntu/ISOs/ESXi-6.5.0-20190104001.iso'
-# esxIso: '/home/ubuntu/ISOs/ESXi670-201903001.iso'
+# esxIso: '/home/ubuntu/ISOs/ESXi-6.5.0-20190104001.iso'
+esxIso: '/home/ubuntu/ISOs/ESXi670-201903001.iso'
 # path to vCenter installer ISO
-vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.5.0-10964411.iso'
-# vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.7.0-11726888.iso'
+# vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.5.0-10964411.iso'
+vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.7.0-11726888.iso'
 
 
 environment_tag: 'nsxt-lab1' # Used to name objects.... Maybe

@@ -32,7 +32,7 @@
       args:
         chdir: /mnt/VCSA/vcsa-cli-installer/lin64/
       when: not vcenter_exists
-      ignore_errors: True
+      #ignore_errors: True
       async: 3600
       poll: 0
       register: vcenter_result
@@ -73,9 +73,8 @@
       async_status:
         jid: "{{ vcenter_result.ansible_job_id }}"
       register: job_result
-      until: job_result.finished
-      # with_items: "{{ vcenter_result }}"
-      ignore_errors: True # This needs to be fixed. The task finishes, but Ansible recoginzes it as failed.
+      until: job_result.finished      
+      #ignore_errors: True # This needs to be fixed. The task finishes, but Ansible recoginzes it as failed.
       retries: 240
       delay: 15
       when: not vcenter_exists

@@ -1,5 +1,5 @@
 ---
-# - include: playbooks/prepareISOInstaller.yml
+- include: playbooks/prepareISOInstaller.yml
 - include: playbooks/deploy_vc_and_hosts.yml
 
 # - name: Wait 5 more minutes the vESXi hosts to become fully responsive
