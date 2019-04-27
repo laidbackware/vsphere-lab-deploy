@@ -6,11 +6,16 @@
     - ../answerfile.yml
   tasks:
     - name: Check if vCenter already exists so install steps can be skipped
-      command: "curl -k --silent -v https://{{ vcenter.ip }}/ui/ --max-time 3"
-      register: result
+      uri:
+        url: "https://{{ vcenter.ip }}/ui/"
+        method: GET
+        status_code: 200
+        timeout: 2
+        validate_certs: False
       ignore_errors: True
+      register: vcenter_response
     - set_fact:
-        vcenter_exists={{result.stdout.find("<title>vSphere Client</title>") != -1}}
+        vcenter_exists={{vcenter_response.status == 200}}
 
     - name: Mount VC installer
       action: mount name='/mnt/VCSA' src="{{ vcIso }}" opts=loop fstype=iso9660 state=mounted
@@ -20,19 +25,19 @@
       template: 
         src=../templates/embedded_vCSA_on_VC_6.5.json
         dest=/tmp/vCSA_on_ESXi.json
-      when: vcIso | search("-6.5.") and not vcenter_exists
+      when: vcIso is search("-6.5.") and not vcenter_exists
+    
     - name: Create JSON template file for VCSA 6.7 with embeded PSC
       template: 
         src=../templates/embedded_vCSA_on_VC_6.7.json
         dest=/tmp/vCSA_on_ESXi.json
-      when: vcIso | search("-6.7.") and not vcenter_exists
+      when: vcIso is search("-6.7.") and not vcenter_exists
 
     - name: Perform VC CLI Install
       command: "./vcsa-deploy install --accept-eula --no-esx-ssl-verify /tmp/vCSA_on_ESXi.json"
       args:
         chdir: /mnt/VCSA/vcsa-cli-installer/lin64/
       when: not vcenter_exists
-      #ignore_errors: True
       async: 3600
       poll: 0
       register: vcenter_result
