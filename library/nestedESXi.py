@@ -84,17 +84,17 @@ def createNIC(content, portGroup, isVDS):
     nic_spec.device = vim.vm.device.VirtualE1000e()
     nic_spec.device.wakeOnLanEnabled = True
     nic_spec.device.deviceInfo = vim.Description()
-    if not isVDS:
-        nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-        nic_spec.device.backing.network = get_obj(content, [vim.Network], portGroup)
-        nic_spec.device.backing.deviceName = portGroup
-    else:
+    try:
         network = get_obj(content, [vim.dvs.DistributedVirtualPortgroup], portGroup)
         dvs_port_connection = vim.dvs.PortConnection()
         dvs_port_connection.portgroupKey = network.key
         dvs_port_connection.switchUuid = network.config.distributedVirtualSwitch.uuid
         nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
         nic_spec.device.backing.port = dvs_port_connection
+    except:
+        nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
+        nic_spec.device.backing.network = get_obj(content, [vim.Network], portGroup)
+        nic_spec.device.backing.deviceName = portGroup
     nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
     nic_spec.device.connectable.startConnected = True
     nic_spec.device.connectable.allowGuestControl = True
@@ -195,9 +195,9 @@ def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memo
     #disk_spec3 = create_virtual_disk(new_disk_kb, 0, 2, False)
 
     scsi_spec = add_scsi_controller()
-    nic0_spec = createNIC(content, vmk_portgroup, False)
-    nic1_spec = createNIC(content, tep_portGroup, False)
-    nic2_spec = createNIC(content, tep_portGroup, False)
+    nic0_spec = createNIC(content, vmk_portgroup)
+    nic1_spec = createNIC(content, tep_portGroup)
+    nic2_spec = createNIC(content, tep_portGroup)
     #nic3_spec = createNIC(content, tep_portGroup, False) # 
     #nic4_spec = createNIC(content, tep_portGroup, False)
 
