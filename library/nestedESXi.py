@@ -78,7 +78,7 @@ def create_virtual_disk(capacity, controller_key, unit_number, in_bytes=False):
     virtual_disk_spec.operation = "add"
     return virtual_disk_spec
 
-def createNIC(content, portGroup, isVDS):
+def createNIC(content, portGroup):
     nic_spec = vim.vm.device.VirtualDeviceSpec()
     nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
     nic_spec.device = vim.vm.device.VirtualE1000e()
