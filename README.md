@@ -1,8 +1,14 @@
 # vsphere-nsx-lab-deploy
 Ansible playbook to automate deployment of vCenter, nested ESXi hosts
 
-## Fork Features
-Cut down features to build 1 host with local disk and 3 networks for a single node NSX-T install. Sped up with async tasks to build hosts and vCenter in parallel. Added support for vSphere 6.7. Switched to deploy the vCenter to another vCenter (may add ESXi host support back later). Remove options for external PSC topologies as EOL feature and removed 6.0 code.
+# Fork
+Cut down features to build a single host with 1 local disk and 3 networks for a single node NSX-T install.
+Main differences to upstream masters:
+- Sped up with async tasks to build hosts and vCenter in parallel. 
+- Added support for vSphere 6.7. 
+- Switched to deploy the vCenter to another vCenter (may add ESXi host support back later). 
+- Removed options for external PSC topologies as EOL feature and removed 6.0 code.
+- Updated Ansible playbook to remove features which will be depricated.
 
 Validated on Ubuntu 16.04 with Ansible 2.7.
 
@@ -10,7 +16,7 @@ Validated on Ubuntu 16.04 with Ansible 2.7.
 Fix vCenter tasks to not need to ignore errors.
 Check if ESXi hosts exist before building the ISO image and skip if no deployments.
 
-#### Table of Contents
+# Table of Contents
 
 1. [Description](#description)
 1. [Setup - The basics of getting started with nsxt](#setup)
