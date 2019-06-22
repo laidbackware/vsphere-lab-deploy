@@ -37,6 +37,7 @@ vcenter: # the vCenter appliance that needs to be deployed
   datacenter: 'Lab' # DC to create after deployment
   datastore: 'SSD' # Datastore name where the vCenter VM will be deployed
   cluster : 'Physical' # Cluster to deploy VM to
+  ntp: 0.uk.pool.ntp.org
 
 vc_mng: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
   ip: '192.168.0.113' # if you have existing VC already deployed and connected to the physical ESX put the ip address here, otherwise it must be the same as the parameters in vcenter section above
