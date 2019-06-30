@@ -224,7 +224,7 @@ def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memo
                               version='vmx-11'
                             ) 
     config.deviceChange = dev_changes
-    ssdOption = vim.option.OptionValue(key='scsi0:1.virtualSSD',value='1')
+    ssdOption = vim.option.OptionValue(key='scsi0:0.virtualSSD',value='1')
     config.extraConfig  = [ssdOption]
 
     task = vmfolder.CreateVM_Task(config=config, pool=resource_pool)
