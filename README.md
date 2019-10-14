@@ -9,12 +9,12 @@ Main differences to upstream masters:
 - Switched to deploy the vCenter to another vCenter (may add ESXi host support back later). 
 - Removed options for external PSC topologies as EOL feature and removed 6.0 code.
 - Updated Ansible playbook to remove features which will be depricated.
+- Refactored prepare ISO to not need root and dynamically generate the KS file
 
 Validated on Ubuntu 16.04 with Ansible 2.7.
 
 ## Fork Todo
-Fix vCenter tasks to not need to ignore errors.
-Check if ESXi hosts exist before building the ISO image and skip if no deployments.
+Fix why ESXi host build async jobs fail unless run as root
 
 # Table of Contents
 
@@ -53,7 +53,7 @@ ansible-playbook deploy.yml
 
 
 ## Limitations
-Ansible => 2.2 is required <br/>
+Ansible => 2.7 is required <br/>
 ESXi version 6.0 and above is supported <br/>
 VCSA version 6.0U2 and above is supported <br/>
 
