@@ -86,15 +86,15 @@
       command: xorrisofs -relaxed-filenames -J -R -o /tmp/customesxv.iso -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table /tmp/ESX/
       args:
         chdir: /tmp/ESX/
-        
+
     - name: Upload the ISO to the Datastore
       vsphere_copy: host="{{ vc_mng.ip }}" login="{{ vc_mng.user }}" password="{{ vc_mng.password }}" src=/tmp/customesxv.iso datacenter="{{ vc_mng.datacenter }}" datastore="{{ vc_mng.datastore }}" path=/yasenISO/customesxv.iso validate_certs=False
       tags: upload
-    # - name: Clean ESX ISO Directory
-    #   file:
-    #     path: /tmp/ESX/
-    #     state: absent
-    # - name: Clean KS temp dir path
-    #   file:
-    #     state: absent
-    #     path: "/tmp/ks-esxi/"
+    - name: Clean ESX ISO Directory
+      file:
+        path: /tmp/ESX/
+        state: absent
+    - name: Clean KS temp dir path
+      file:
+        state: absent
+        path: "/tmp/ks-esxi/"
