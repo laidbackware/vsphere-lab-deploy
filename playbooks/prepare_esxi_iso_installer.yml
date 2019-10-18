@@ -18,51 +18,51 @@
     #   action: mount name='/mnt/ESX' src="{{ esxIso }}" fstype=iso9660 state=absent
     
     - name: Fix permissions before delete
-      command: chmod -R +w /{{tmp_dir}}/ESX
+      command: chmod -R +w {{tmp_dir}}/ESX
       ignore_errors: yes
 
     - name: Clean ESX ISO Directory
       file:
-        path: /{{tmp_dir}}/ESX
+        path: '{{tmp_dir}}/ESX'
         state: absent
 
     - name: Extract ISO image
-      command: xorriso -ecma119_map lowercase -osirrox on -indev {{esxIso}} -extract / /{{tmp_dir}}/ESX
+      command: xorriso -ecma119_map lowercase -osirrox on -indev {{esxIso}} -extract / {{tmp_dir}}/ESX
 
     - name: Fix permissions
       command: "{{item}}"
       with_items:
-        - chmod 777 /{{tmp_dir}}/ESX
-        - find /{{tmp_dir}}/ESX -type f -exec chmod -c 0644 {} \;
+        - chmod 777 {{tmp_dir}}/ESX
+        - find {{tmp_dir}}/ESX -type f -exec chmod -c 0644 {} \;
 
     - name: Edit boot.cfg
       replace:
-        dest: /{{tmp_dir}}/ESX/boot.cfg
+        dest: '{{tmp_dir}}/ESX/boot.cfg'
         regexp: 'kernelopt=runweasel'
         replace: 'kernelopt=ks=file://etc/vmware/weasel/KS.CFG'
 
     - name: insert customks.tgz in boot.cfg modules section
       replace:
-        dest: /{{tmp_dir}}/ESX/boot.cfg
+        dest: '{{tmp_dir}}/ESX/boot.cfg'
         regexp: 'imgpayld.tgz$'
         replace: 'imgpayld.tgz --- /customks.tgz'
 
     - name: Clean KS temp dir path
       file:
         state: absent
-        path: "/{{tmp_dir}}/ks-esxi/"
+        path: '{{tmp_dir}}/ks-esxi/'
 
     - name: Ensure KS temp dir exists
-      file: path=/{{tmp_dir}}/ks-esxi/etc/vmware/weasel state=directory
+      file: path={{tmp_dir}}/ks-esxi/etc/vmware/weasel state=directory
 
     - name: Create empty KS file
       file:
-        path: {{tmp_dir}}/ks-esxi/etc/vmware/weasel/KS.CFG
+        path: '{{tmp_dir}}/ks-esxi/etc/vmware/weasel/KS.CFG'
         state: touch
 
     - name: Update KS file
       blockinfile:
-        path: /{{tmp_dir}}/ks-esxi/etc/vmware/weasel/KS.CFG
+        path: '{{tmp_dir}}/ks-esxi/etc/vmware/weasel/KS.CFG'
         block: |
           vmaccepteula
           rootpw {{nestedESX.password}}
@@ -78,23 +78,24 @@
 
     - name: Create the custom kickstart tgz file
       archive:
-        path: /{{tmp_dir}}/ks-esxi/
-        dest: /{{tmp_dir}}/ESX/customks.tgz
+        path: '{{tmp_dir}}/ks-esxi/'
+        dest: '{{tmp_dir}}/ESX/customks.tgz'
         format: gz
 
     - name: Burn an ISO image
-      command: xorrisofs -relaxed-filenames -J -R -o /{{tmp_dir}}/customesxv.iso -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table /{{tmp_dir}}/ESX/
+      command: xorrisofs -relaxed-filenames -J -R -o {{tmp_dir}}/customesxv.iso -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table {{tmp_dir}}/ESX/
       args:
-        chdir: /{{tmp_dir}}/ESX/
+        chdir: '{{tmp_dir}}/ESX/'
 
     - name: Upload the ISO to the Datastore
-      vsphere_copy: host="{{ vc_mng.ip }}" login="{{ vc_mng.user }}" password="{{ vc_mng.password }}" src=/{{tmp_dir}}/customesxv.iso datacenter="{{ vc_mng.datacenter }}" datastore="{{ vc_mng.datastore }}" path=/ESXI-ISO/customesxv.iso validate_certs=False
+      vsphere_copy: host="{{ vc_mng.ip }}" login="{{ vc_mng.user }}" password="{{ vc_mng.password }}" src={{tmp_dir}}/customesxv.iso datacenter="{{ vc_mng.datacenter }}" datastore="{{ vc_mng.datastore }}" path=/ESXI-ISO/customesxv.iso validate_certs=False
       tags: upload
+
     - name: Clean ESX ISO Directory
       file:
-        path: /{{tmp_dir}}/ESX/
+        path: '{{tmp_dir}}/ESX/'
         state: absent
     - name: Clean KS temp dir path
       file:
         state: absent
-        path: "/{{tmp_dir}}/ks-esxi/"
+        path: "{{tmp_dir}}/ks-esxi/"
