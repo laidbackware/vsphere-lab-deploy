@@ -57,7 +57,7 @@
 
     - name: Create empty KS file
       file:
-        path: /{{tmp_dir}}/ks-esxi/etc/vmware/weasel/KS.CFG
+        path: {{tmp_dir}}/ks-esxi/etc/vmware/weasel/KS.CFG
         state: touch
 
     - name: Update KS file
