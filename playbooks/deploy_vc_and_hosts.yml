@@ -43,7 +43,7 @@
       async: 3600
       poll: 0
       register: vcenter_result
-    
+
     - name: Deploy Nested vESXi VMs
       nestedESXi:
         vcenter: "{{ vc_mng.ip }}"

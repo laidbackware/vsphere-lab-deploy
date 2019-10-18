@@ -43,7 +43,7 @@ def connect_to_api(vchost, vc_user, vc_pwd):
     global service_instance
     try:
         service_instance = SmartConnect(host=vchost, user=vc_user, pwd=vc_pwd)
-    except (requests.ConnectionError, ssl.SSLError):
+    except (requests.ConnectionError, ssl.SSLError, ssl.SSLCertVerificationError):
         try:
             context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             context.verify_mode = ssl.CERT_NONE
@@ -248,8 +248,8 @@ def main():
             vcenter_passwd=dict(required=True, type='str', no_log=True),
             cluster=dict(required=True, type='str'),
             datastore=dict(required=True, type='str'),
-			vmk_portgroup=dict(required=True, type='str'),
-			tep_portgroup=dict(required=True, type='str'),
+            vmk_portgroup=dict(required=True, type='str'),
+            tep_portgroup=dict(required=True, type='str'),
             cpucount=dict(required=True, type='int'),
             memory=dict(required=True, type='int'),
             isopath=dict(required=True, type='str'),
@@ -267,7 +267,7 @@ def main():
     vm = find_virtual_machine(content, module.params['vmname'])
     if vm:
         module.exit_json(changed=False, msg='A VM with the name {} was already present'.format(module.params['vmname']), stat = '1')
-	return 0
+    return 0
     if module.check_mode:
         module.exit_json(changed=True, debug_out="Test Debug out, Yasen !!!")
     result = create_vm(module.params['vmname'], content, module.params['cluster'], module.params['datastore'], module.params['vmk_portgroup'], module.params['cpucount'], module.params['memory'], module.params['isopath'], module.params['hdd'], module.params['tep_portgroup'])
