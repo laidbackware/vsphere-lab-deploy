@@ -2,8 +2,8 @@
 - name: Deploy VC and Hosts
   hosts: localhost
   gather_facts: False
-  vars_files:
-    - ../answerfile.yml
+  # vars_files:
+  #   - ../answerfile.yml
   tasks:
     - name: Check if vCenter already exists so install steps can be skipped
       uri:
@@ -57,7 +57,7 @@
         cpucount: "{{ item.value.cpu }}"
         memory: "{{ item.value.ram }}"
         hdd: "{{ item.value.hdd }}"
-        isopath: "yasenISO/customesxv.iso"
+        isopath: "ESXI-ISO/customesxv.iso"
       with_dict: "{{ vESX }}"
       async: 7200
       poll: 0

@@ -2,8 +2,8 @@
 - name: Configure vESX
   hosts: localhost
   gather_facts: False
-  vars_files:
-    - ../answerfile.yml
+  # vars_files:
+  #   - ../answerfile.yml
   tasks:
     - name: Change vESXi hostnames
       vmware_vm_shell:

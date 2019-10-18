@@ -2,8 +2,8 @@
 - name: Customize vESX Hosts
   hosts: localhost
   gather_facts: False
-  vars_files:
-    - ../answerfile.yml
+  # vars_files:
+  #   - ../answerfile.yml
   tasks:
     - name: Add a VMware vSwitch
       vmware_vswitch:
