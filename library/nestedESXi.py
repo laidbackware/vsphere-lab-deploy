@@ -267,7 +267,7 @@ def main():
     vm = find_virtual_machine(content, module.params['vmname'])
     if vm:
         module.exit_json(changed=False, msg='A VM with the name {} was already present'.format(module.params['vmname']), stat = '1')
-    return 0
+        return 0
     if module.check_mode:
         module.exit_json(changed=True, debug_out="Test Debug out, Yasen !!!")
     result = create_vm(module.params['vmname'], content, module.params['cluster'], module.params['datastore'], module.params['vmk_portgroup'], module.params['cpucount'], module.params['memory'], module.params['isopath'], module.params['hdd'], module.params['tep_portgroup'])
