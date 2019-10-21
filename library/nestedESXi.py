@@ -25,6 +25,11 @@ import time
 from pyVim.connect import SmartConnect
 from pyVmomi import vim, vmodl
 
+try: # Try block handles behaviour change in 3.7 on ssl cert error
+    ssl_cert_error = ssl.SSLCertVerificationError
+except:
+    ssl_cert_error = ssl.SSLError
+
 def find_virtual_machine(content, searched_vm_name):
     virtual_machines = get_all_objs(content, [vim.VirtualMachine])
     for vm in virtual_machines:
@@ -43,7 +48,7 @@ def connect_to_api(vchost, vc_user, vc_pwd):
     global service_instance
     try:
         service_instance = SmartConnect(host=vchost, user=vc_user, pwd=vc_pwd)
-    except (requests.ConnectionError, ssl.SSLError, ssl.SSLCertVerificationError):
+    except (requests.ConnectionError, ssl.SSLError, ssl_cert_error):
         try:
             context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             context.verify_mode = ssl.CERT_NONE
