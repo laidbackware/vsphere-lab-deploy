@@ -2,7 +2,6 @@
 - name: Deploy VC and Hosts
   hosts: localhost
   gather_facts: False
-  become: true
   # vars_files:
   #   - ../answerfile.yml
   pre_tasks:
@@ -48,20 +47,24 @@
     - name: Fix permissions before delete
       command: chmod -R +w {{tmp_dir}}/VCSA
       ignore_errors: yes
+      when: not vcenter_exists
 
     - name: Clean ESX ISO Directory
       file:
         path: '{{tmp_dir}}/VCSA'
         state: absent
+      when: not vcenter_exists
 
     - name: Extract ISO image
       command: xorriso -ecma119_map lowercase -osirrox on -indev {{vcIso}} -extract / {{tmp_dir}}/VCSA
+      when: not vcenter_exists
 
     - name: Fix permissions
       command: "{{item}}"
       with_items:
         - chmod -R 777 {{tmp_dir}}/VCSA
         # - find {{tmp_dir}}/VCSA -type f -exec chmod -c 0644 {} \;
+      when: not vcenter_exists
 
     - name: Create JSON template file for VCSA 6.5 with embeded PSC
       template: 

@@ -1,8 +1,7 @@
 ---
 # - include: playbooks/prepareISOInstaller.yml
 - include: playbooks/deploy_vc_and_hosts.yml
-# - include: playbooks/configureNestedESXi.yml
-# - include: playbooks/customize_esxi.yml
+- include: playbooks/configure_nested_esxi.yml
 
 #TODO Check if ESXi hosts exist before triggering ISO build and upload 
 #TODO Thin disk mode not passing in from answers file, as the template module converts in to a string

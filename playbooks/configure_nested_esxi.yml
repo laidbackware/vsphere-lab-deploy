@@ -25,6 +25,7 @@
       async: 7200
       poll: 0
       register: hname
+
     - name: Result check for configuring hostname
       async_status:
         jid: "{{ item.ansible_job_id }}"
@@ -32,6 +33,7 @@
       until: job_result.finished
       with_items: "{{ hname.results }}"
       retries: 10
+
     - name: Set VLAN to Management portgroup
       vmware_vm_shell:
         hostname: "{{ vc_mng.ip }}"
@@ -52,6 +54,7 @@
       async: 7200
       poll: 0
       register: hvlan
+
     - name: Result check for setting VLAN
       async_status:
         jid: "{{ item.ansible_job_id }}"
@@ -59,6 +62,7 @@
       until: job_result.finished
       with_items: "{{ hvlan.results }}"
       retries: 10
+
     - name: Set vmk0 ip addresses
       vmware_vm_shell:
         hostname: "{{ vc_mng.ip }}"
@@ -79,6 +83,7 @@
       async: 7200
       poll: 0
       register: hip
+
     - name: Result check for setting vmk0 ip addresses
       async_status:
         jid: "{{ item.ansible_job_id }}"
@@ -86,6 +91,7 @@
       until: job_result.finished
       with_items: "{{ hip.results }}"
       retries: 10
+
     - name: Set default gw
       vmware_vm_shell:
         hostname: "{{ vc_mng.ip }}"
@@ -106,6 +112,7 @@
       async: 7200
       poll: 0
       register: hgw
+
     - name: Result check for setting default gw
       async_status:
         jid: "{{ item.ansible_job_id }}"
@@ -113,6 +120,7 @@
       until: job_result.finished
       with_items: "{{ hgw.results }}"
       retries: 10
+
     - name: Set search domain
       vmware_vm_shell:
         hostname: "{{ vc_mng.ip }}"
@@ -133,6 +141,7 @@
       async: 7200
       poll: 0
       register: hsd
+
     - name: Result check for setting a search domain
       async_status:
         jid: "{{ item.ansible_job_id }}"
@@ -140,6 +149,7 @@
       until: job_result.finished
       with_items: "{{ hsd.results }}"
       retries: 10
+
     - name: Set a DNS Server
       vmware_vm_shell:
         hostname: "{{ vc_mng.ip }}"
@@ -160,6 +170,7 @@
       async: 7200
       poll: 0
       register: hdns
+
     - name: Disable SSH Warnings
       vmware_vm_shell:
         hostname: "{{ vc_mng.ip }}"
@@ -180,6 +191,7 @@
       async: 7200
       poll: 0
       register: hwrn
+
     - name: Result check for setting a DNS Server
       async_status:
         jid: "{{ item.ansible_job_id }}"
@@ -201,3 +213,38 @@
         state: present
       with_dict: "{{ vESX }}"
 
+    - name: Add a VMware vSwitch
+      vmware_vswitch:
+        hostname: '{{ item.value.ip }}'
+        username: '{{ nestedESX.user }}'
+        password: '{{ nestedESX.password }}'   
+        validate_certs: False
+        switch: 'vSwitch1'
+        nics: 'vmnic1'
+        mtu: 1600
+      with_dict: "{{ vESX }}"
+      delegate_to: localhost
+      
+    - name: Add Management Network VM Portgroup to all hosts in a cluster
+      vmware_portgroup:
+        hostname: "{{ vcenter.ip }}"
+        username: "{{ vcenter.user }}"
+        password: "{{ vcenter.password }}"
+        validate_certs: False
+        cluster_name: "Compute"
+        switch_name: 'vSwitch1'
+        portgroup_name: 'TEP_PG'
+        vlan_id: 0
+      delegate_to: localhost
+      
+    - name: Add Management Network VM Portgroup to all hosts in a cluster
+      vmware_portgroup:
+        hostname: "{{ vcenter.ip }}"
+        username: "{{ vcenter.user }}"
+        password: "{{ vcenter.password }}"
+        validate_certs: False
+        cluster_name: "Compute"
+        switch_name: 'vSwitch0'
+        portgroup_name: 'Net1'
+        vlan_id: 0
+      delegate_to: localhost
