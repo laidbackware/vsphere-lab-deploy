@@ -55,7 +55,7 @@
         state: absent
 
     - name: Extract ISO image
-      command: xorriso -ecma119_map lowercase -osirrox on -indev {{esxIso}} -extract / {{tmp_dir}}/VCSA
+      command: xorriso -ecma119_map lowercase -osirrox on -indev {{vcIso}} -extract / {{tmp_dir}}/VCSA
 
     - name: Fix permissions
       command: "{{item}}"
