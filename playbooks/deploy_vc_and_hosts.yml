@@ -23,21 +23,21 @@
     - set_fact:
         vcenter_exists={{vcenter_response.status == 200}}
 
-    # - name: Mount VC installer
-    #   action: mount name='/mnt/VCSA' src="{{ vcIso }}" opts=loop fstype=iso9660 state=mounted
-    #   tags: mount
-    #   when: not vcenter_exists
-    - name: Create VCSA ISO Directory
-      file:
-        path: '{{tmp_dir}}/VCSA'
-        state: directory
+    - name: Mount VC installer
+      action: mount name='{{tmp_dir}}/VCSA' src="{{ vcIso }}" opts=loop fstype=iso9660 state=mounted
+      tags: mount
+      when: not vcenter_exists
+    # - name: Create VCSA ISO Directory
+    #   file:
+    #     path: '{{tmp_dir}}/VCSA'
+    #     state: directory
     
-    - name: Ensure mount point is empty in case of previous failed runs
-      command: fusermount -u {{tmp_dir}}/VCSA
-      ignore_errors: yes
+    # - name: Ensure mount point is empty in case of previous failed runs
+    #   command: fusermount -u {{tmp_dir}}/VCSA
+    #   ignore_errors: yes
 
-    - name: Mount VC Install with Fuse ISO
-      command: fuseiso {{vcIso}} {{tmp_dir}}/VCSA
+    # - name: Mount VC Install with Fuse ISO
+    #   command: fuseiso {{vcIso}} {{tmp_dir}}/VCSA
 
     - name: Create JSON template file for VCSA 6.5 with embeded PSC
       template: 
@@ -141,18 +141,18 @@
       with_dict: "{{ clusters }}"
 
   post_tasks:
-    # - name: Unmount VCSA installer
-    #   action: mount name='/mnt/VCSA' src="{{ vcIso }}" fstype=iso9660 state=absent
-    #   when: not vcenter_exists
+    - name: Unmount VCSA installer
+      action: mount name='{{tmp_dir}}/VCSA' src="{{ vcIso }}" fstype=iso9660 state=absent
+      when: not vcenter_exists
     
-    - name: Unmount VSCA install with fuse
-      command: fusermount -u {{tmp_dir}}/VCSA
-      ignore_errors: yes
+    # - name: Unmount VSCA install with fuse
+    #   command: fusermount -u {{tmp_dir}}/VCSA
+    #   ignore_errors: yes
 
-    - name: Clean VCSA ISO Directory
-      file:
-        path: '{{tmp_dir}}/VCSA/'
-        state: absent
+    # - name: Clean VCSA ISO Directory
+    #   file:
+    #     path: '{{tmp_dir}}/VCSA/'
+    #     state: absent
 
     - name: Delete the temporary JSON template file
       file: 
