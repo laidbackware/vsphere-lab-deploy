@@ -14,17 +14,22 @@ Main differences to upstream masters:
 Validated on Ubuntu 16.04 with Ansible 2.7.
 
 ## Fork Todo
-Fix why ESXi host build async jobs fail unless run as root
+Fix prepare_iso task so that a proper error is generated if the ISO is in use.
+
 
 # Table of Contents
 
-1. [Description](#description)
-1. [Setup - The basics of getting started with nsxt](#setup)
-    * [Dependencies](#Dependencies)
-    * [Edit answersfile.yml](#Edit answersfile.yml)
-1. [Usage](#usage)
-1. [Limitations)
-1. [Development](#development)
+- [vsphere-nsx-lab-deploy](#vsphere-nsx-lab-deploy)
+- [Fork](#fork)
+  - [Fork Todo](#fork-todo)
+- [Table of Contents](#table-of-contents)
+  - [Description](#description)
+  - [Setup](#setup)
+    - [Dependencies](#dependencies)
+    - [Edit answersfile.yml](#edit-answersfileyml)
+  - [Usage](#usage)
+  - [Limitations](#limitations)
+  - [Development](#development)
 
 ## Description
 
@@ -32,7 +37,7 @@ This repository will be used to hold an Ansible Playbook to deploy and configure
 
 ## Setup
 
-Validated on Ubuntu 14 deploying vSphere 6.0 and vSphere 6.5
+Validated on Ubuntu 16.04 and 18.04 deploying vSphere 6.5 and vSphere 6.7
 
 ### Dependencies
 
