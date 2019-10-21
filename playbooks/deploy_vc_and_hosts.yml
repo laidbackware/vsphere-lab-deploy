@@ -4,11 +4,11 @@
   gather_facts: False
   # vars_files:
   #   - ../answerfile.yml
-  pre_tasks:
-    - name: Ensure fuseiso is intalled
-      package:
-        name: fuseiso
-        state: present
+  # pre_tasks:
+  #   - name: Ensure fuseiso is intalled
+  #     package:
+  #       name: fuseiso
+  #       state: present
   tasks:
     - name: Check if vCenter already exists so install steps can be skipped
       uri:
