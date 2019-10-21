@@ -4,6 +4,11 @@
   gather_facts: False
   # vars_files:
   #   - ../answerfile.yml
+  pre_tasks:
+    - name: Ensure fuseiso is intalled
+      package:
+        name: fuseiso
+        state: present
   tasks:
     - name: Check if vCenter already exists so install steps can be skipped
       uri:
@@ -18,27 +23,38 @@
     - set_fact:
         vcenter_exists={{vcenter_response.status == 200}}
 
-    - name: Mount VC installer
-      action: mount name='/mnt/VCSA' src="{{ vcIso }}" opts=loop fstype=iso9660 state=mounted
-      tags: mount
-      when: not vcenter_exists
+    # - name: Mount VC installer
+    #   action: mount name='/mnt/VCSA' src="{{ vcIso }}" opts=loop fstype=iso9660 state=mounted
+    #   tags: mount
+    #   when: not vcenter_exists
+    - name: Create VCSA ISO Directory
+      file:
+        path: '{{tmp_dir}}/VCSA'
+        state: directory
+    
+    - name: Ensure mount point is empty in case of previous failed runs
+      command: fusermount -u {{tmp_dir}}/VCSA
+      ignore_errors: yes
+
+    - name: Mount VC Install with Fuse ISO
+      command: fuseiso {{vcIso}} {{tmp_dir}}/VCSA
 
     - name: Create JSON template file for VCSA 6.5 with embeded PSC
       template: 
         src=../templates/embedded_vCSA_on_VC_6.5.json
-        dest=/tmp/vCSA_on_ESXi.json
+        dest={{tmp_dir}}/vCSA_on_ESXi.json
       when: vcIso is search("-6.5.") and not vcenter_exists
     
     - name: Create JSON template file for VCSA 6.7 with embeded PSC
       template: 
         src=../templates/embedded_vCSA_on_VC_6.7.json
-        dest=/tmp/vCSA_on_ESXi.json
+        dest={{tmp_dir}}/vCSA_on_ESXi.json
       when: vcIso is search("-6.7.") and not vcenter_exists
 
     - name: Perform VC CLI Install
-      command: "./vcsa-deploy install --accept-eula --no-esx-ssl-verify /tmp/vCSA_on_ESXi.json"
+      command: "./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
       args:
-        chdir: /mnt/VCSA/vcsa-cli-installer/lin64/
+        chdir: '{{tmp_dir}}/VCSA/vcsa-cli-installer/lin64/'
       when: not vcenter_exists
       async: 3600
       poll: 0
@@ -51,8 +67,8 @@
         vcenter_user: "{{ vc_mng.user }}" 
         vcenter_passwd: "{{ vc_mng.password }}" 
         cluster: "{{ item.value.mng_cluster }}"
-        datastore: "{{ vc_mng.datastore }}" # Datastore on physical where
-        vmk_portgroup: "{{ item.value.vmk_portgroup}}" ### Used for VMKs and VMs
+        datastore: "{{ vc_mng.datastore }}" 
+        vmk_portgroup: "{{ item.value.vmk_portgroup}}" 
         tep_portgroup: "{{ item.value.tep_portgroup}}" ### Must be attached to port group with MTU of 1600+
         cpucount: "{{ item.value.cpu }}"
         memory: "{{ item.value.ram }}"
@@ -75,7 +91,7 @@
       retries: 100
       delay: 15
 
-    - debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under /tmp and follow vcsa-cli-installer.log "
+    - debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under {{tmp_dir}} and follow vcsa-cli-installer.log "
       when: not vcenter_exists
 
     - name: Result check for deployment of vCenter task
@@ -83,7 +99,6 @@
         jid: "{{ vcenter_result.ansible_job_id }}"
       register: job_result
       until: job_result.finished      
-      #ignore_errors: True # This needs to be fixed. The task finishes, but Ansible recoginzes it as failed.
       retries: 240
       delay: 15
       when: not vcenter_exists
@@ -101,11 +116,7 @@
       pause: seconds=30
       when: not vcenter_exists
 
-    - name: Unmount VCSA installer
-      action: mount name='/mnt/VCSA' src="{{ esxIso }}" fstype=iso9660 state=absent
-
-    - name: Delete the temporary JSON template file
-      file: path=/tmp/vCSA_on_ESXi.json state=absent
+    
     
     - name: Create Datacenter
       vmware_datacenter:
@@ -129,7 +140,24 @@
         enable_vsan: False  # Hardcoded as we need to enable vSAN when the hosts are added to the cluster
       with_dict: "{{ clusters }}"
 
+  post_tasks:
+    # - name: Unmount VCSA installer
+    #   action: mount name='/mnt/VCSA' src="{{ vcIso }}" fstype=iso9660 state=absent
+    #   when: not vcenter_exists
+    
+    - name: Unmount VSCA install with fuse
+      command: fusermount -u {{tmp_dir}}/VCSA
+      ignore_errors: yes
 
+    - name: Clean VCSA ISO Directory
+      file:
+        path: '{{tmp_dir}}/VCSA/'
+        state: absent
+
+    - name: Delete the temporary JSON template file
+      file: 
+        path: '{{tmp_dir}}/vCSA_on_ESXi.json' 
+        state: absent
 
 
 
