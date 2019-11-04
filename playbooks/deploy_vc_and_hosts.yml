@@ -16,7 +16,7 @@
   tasks:
     - name: Check if vCenter already exists so install steps can be skipped
       uri:
-        url: "https://{{ nested_nested_vcenter.ip }}/ui/"
+        url: "https://{{ nested_vcenter.ip }}/ui/"
         method: GET
         status_code: 200
         timeout: 2
