@@ -3,16 +3,16 @@
     "__comments": "Sample template to deploy a vCenter Server Appliance with an embedded Platform Services Controller on a vCenter Server instance.",
     "new.vcsa": {
         "vc": {
-            "hostname": "{{ vc_mng.ip }}",
-            "username": "{{ vc_mng.user }}",
-            "password": "{{ vc_mng.password }}",
-            "deployment.network": "{{ vcenter.network }}",
+            "hostname": "{{ parent_vcenter.ip }}",
+            "username": "{{ parent_vcenter.user }}",
+            "password": "{{ parent_vcenter.password }}",
+            "deployment.network": "{{ nested_vcenter.network }}",
             "datacenter": [
-                "{{ vc_mng.datacenter }}"
+                "{{ parent_vcenter.datacenter }}"
             ],
-            "datastore": "{{ vcenter.datastore }}",
+            "datastore": "{{ nested_vcenter.datastore }}",
             "target": [
-                "{{ vcenter.cluster }}"
+                "{{ nested_vcenter.cluster }}"
             ]
         },
         "appliance": {
@@ -23,22 +23,22 @@
         "network": {
             "ip.family": "ipv4",
             "mode": "static",
-            "ip": "{{ vcenter.ip }}",
+            "ip": "{{ nested_vcenter.ip }}",
             "dns.servers": [
                 "{{ dns1 }}",
                 "{{ dns2 }}"
             ],
-            "prefix": "{{ vcenter.mask }}",
-            "gateway": "{{ vcenter.gw }}",
-            "system.name": "{{ vcenter.host_name }}"
+            "prefix": "{{ nested_vcenter.mask }}",
+            "gateway": "{{ nested_vcenter.gw }}",
+            "system.name": "{{ nested_vcenter.host_name }}"
         },
         "os": {
-            "password": "{{ vcenter.password }}",
+            "password": "{{ nested_vcenter.password }}",
             "ssh.enable": true
         },
         "sso": {
-            "password": "{{ vcenter.password }}",
-            "domain-name": "{{ vcenter.sso_domain }}",
+            "password": "{{ nested_vcenter.password }}",
+            "domain-name": "{{ nested_vcenter.sso_domain }}",
             "site-name": "Lab"
         }
     },

@@ -1,27 +1,27 @@
 ---
-- name: Configure vESX
+- name: Configure nested_hosts
   hosts: localhost
   gather_facts: False
   # vars_files:
   #   - ../answerfile.yml
   tasks:
-    - name: Change vESXi hostnames
+    - name: Change nested_hostsi hostnames
       vmware_vm_shell:
-        hostname: "{{ vc_mng.ip }}"
-        username: "{{ vc_mng.user }}"
-        password: "{{ vc_mng.password }}"
-        datacenter: "{{ vc_mng.datacenter }}"
+        hostname: "{{ parent_vcenter.ip }}"
+        username: "{{ parent_vcenter.user }}"
+        password: "{{ parent_vcenter.password }}"
+        datacenter: "{{ parent_vcenter.datacenter }}"
         validate_certs: false
         vm_id: "{{ environment_tag }}-{{ item.key }}"
-        vm_username: '{{ nestedESX.user }}'
-        vm_password: '{{ nestedESX.password }}'
+        vm_username: "{{ nested_host_credentials.user }}"
+        vm_password: "{{ nested_host_credentials.password }}"
         vm_shell: /bin/esxcli
         vm_shell_args: "system hostname set --fqdn={{ environment_tag }}-{{ item.key }}.{{ domain }}"
         vm_shell_env:
         - "PATH=/bin"
         - "VAR=test"
         vm_shell_cwd: "/tmp"
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
       async: 7200
       poll: 0
       register: hname
@@ -36,21 +36,21 @@
 
     - name: Set VLAN to Management portgroup
       vmware_vm_shell:
-        hostname: "{{ vc_mng.ip }}"
-        username: "{{ vc_mng.user }}"
-        password: "{{ vc_mng.password }}"
-        datacenter: "{{ vc_mng.datacenter }}"
+        hostname: "{{ parent_vcenter.ip }}"
+        username: "{{ parent_vcenter.user }}"
+        password: "{{ parent_vcenter.password }}"
+        datacenter: "{{ parent_vcenter.datacenter }}"
         validate_certs: false
         vm_id: "{{ environment_tag }}-{{ item.key }}"
-        vm_username: '{{ nestedESX.user }}'
-        vm_password: '{{ nestedESX.password }}'
+        vm_username: "{{ nested_host_credentials.user }}"
+        vm_password: "{{ nested_host_credentials.password }}"
         vm_shell: /bin/esxcli
         vm_shell_args: "network vswitch standard portgroup set --portgroup-name='Management Network' --vlan-id={{ item.value.vlan }}"
         vm_shell_env: 
         - "PATH=/bin"
         - "VAR=test"
         vm_shell_cwd: "/tmp"
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
       async: 7200
       poll: 0
       register: hvlan
@@ -65,21 +65,21 @@
 
     - name: Set vmk0 ip addresses
       vmware_vm_shell:
-        hostname: "{{ vc_mng.ip }}"
-        username: "{{ vc_mng.user }}"
-        password: "{{ vc_mng.password }}"
-        datacenter: "{{ vc_mng.datacenter }}"
+        hostname: "{{ parent_vcenter.ip }}"
+        username: "{{ parent_vcenter.user }}"
+        password: "{{ parent_vcenter.password }}"
+        datacenter: "{{ parent_vcenter.datacenter }}"
         validate_certs: false
         vm_id: "{{ environment_tag }}-{{ item.key }}"
-        vm_username: '{{ nestedESX.user }}'
-        vm_password: '{{ nestedESX.password }}'
+        vm_username: "{{ nested_host_credentials.user }}"
+        vm_password: "{{ nested_host_credentials.password }}"
         vm_shell: /bin/esxcli
         vm_shell_args: "network ip interface ipv4 set --interface-name=vmk0 --ipv4={{ item.value.ip }} --netmask={{ item.value.mask }} --type=static"
         vm_shell_env: 
         - "PATH=/bin"
         - "VAR=test"
         vm_shell_cwd: "/tmp"
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
       async: 7200
       poll: 0
       register: hip
@@ -94,21 +94,21 @@
 
     - name: Set default gw
       vmware_vm_shell:
-        hostname: "{{ vc_mng.ip }}"
-        username: "{{ vc_mng.user }}"
-        password: "{{ vc_mng.password }}"
-        datacenter: "{{ vc_mng.datacenter }}"
+        hostname: "{{ parent_vcenter.ip }}"
+        username: "{{ parent_vcenter.user }}"
+        password: "{{ parent_vcenter.password }}"
+        datacenter: "{{ parent_vcenter.datacenter }}"
         validate_certs: false
         vm_id: "{{ environment_tag }}-{{ item.key }}"
-        vm_username: '{{ nestedESX.user }}'
-        vm_password: '{{ nestedESX.password }}'
+        vm_username: "{{ nested_host_credentials.user }}"
+        vm_password: "{{ nested_host_credentials.password }}"
         vm_shell: /bin/esxcfg-route
         vm_shell_args: " -a default {{ item.value.gw }}"
         vm_shell_env: 
         - "PATH=/bin"
         - "VAR=test"
         vm_shell_cwd: "/tmp"
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
       async: 7200
       poll: 0
       register: hgw
@@ -123,21 +123,21 @@
 
     - name: Set search domain
       vmware_vm_shell:
-        hostname: "{{ vc_mng.ip }}"
-        username: "{{ vc_mng.user }}"
-        password: "{{ vc_mng.password }}"
-        datacenter: "{{ vc_mng.datacenter }}"
+        hostname: "{{ parent_vcenter.ip }}"
+        username: "{{ parent_vcenter.user }}"
+        password: "{{ parent_vcenter.password }}"
+        datacenter: "{{ parent_vcenter.datacenter }}"
         validate_certs: false
         vm_id: "{{ environment_tag }}-{{ item.key }}"
-        vm_username: '{{ nestedESX.user }}'
-        vm_password: '{{ nestedESX.password }}'
+        vm_username: "{{ nested_host_credentials.user }}"
+        vm_password: "{{ nested_host_credentials.password }}"
         vm_shell: /bin/esxcli
         vm_shell_args: "network ip dns search add --domain={{ domain}}"
         vm_shell_env: 
         - "PATH=/bin"
         - "VAR=test"
         vm_shell_cwd: "/tmp"
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
       async: 7200
       poll: 0
       register: hsd
@@ -152,42 +152,42 @@
 
     - name: Set a DNS Server
       vmware_vm_shell:
-        hostname: "{{ vc_mng.ip }}"
-        username: "{{ vc_mng.user }}"
-        password: "{{ vc_mng.password }}"
-        datacenter: "{{ vc_mng.datacenter }}"
+        hostname: "{{ parent_vcenter.ip }}"
+        username: "{{ parent_vcenter.user }}"
+        password: "{{ parent_vcenter.password }}"
+        datacenter: "{{ parent_vcenter.datacenter }}"
         validate_certs: false
         vm_id: "{{ environment_tag }}-{{ item.key }}"
-        vm_username: '{{ nestedESX.user }}'
-        vm_password: '{{ nestedESX.password }}'
+        vm_username: "{{ nested_host_credentials.user }}"
+        vm_password: "{{ nested_host_credentials.password }}"
         vm_shell: /bin/esxcli
         vm_shell_args: "network ip dns server add --server={{ dns1 }}"
         vm_shell_env: 
         - "PATH=/bin"
         - "VAR=test"
         vm_shell_cwd: "/tmp"
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
       async: 7200
       poll: 0
       register: hdns
 
     - name: Disable SSH Warnings
       vmware_vm_shell:
-        hostname: "{{ vc_mng.ip }}"
-        username: "{{ vc_mng.user }}"
-        password: "{{ vc_mng.password }}"
-        datacenter: "{{ vc_mng.datacenter }}"
+        hostname: "{{ parent_vcenter.ip }}"
+        username: "{{ parent_vcenter.user }}"
+        password: "{{ parent_vcenter.password }}"
+        datacenter: "{{ parent_vcenter.datacenter }}"
         validate_certs: false
         vm_id: "{{ environment_tag }}-{{ item.key }}"
-        vm_username: '{{ nestedESX.user }}'
-        vm_password: '{{ nestedESX.password }}'
+        vm_username: "{{ nested_host_credentials.user }}"
+        vm_password: "{{ nested_host_credentials.password }}"
         vm_shell: /bin/vim-cmd
         vm_shell_args: "hostsvc/advopt/update UserVars.SuppressShellWarning long 1"
         vm_shell_env: 
         - "PATH=/bin"
         - "VAR=test"
         vm_shell_cwd: "/tmp"
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
       async: 7200
       poll: 0
       register: hwrn
@@ -201,50 +201,52 @@
       retries: 10
     - name: Add ESXi Host to VCSA
       vmware_host:
-        hostname: "{{ vcenter.ip }}"
-        username: "{{ vcenter.user }}"
-        password: "{{ vcenter.password }}"
-        datacenter_name: "{{ vcenter.datacenter }}"
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
+        datacenter_name: "{{ nested_vcenter.datacenter }}"
         validate_certs: false
         cluster_name: "{{ item.value.cluster }}"
         esxi_hostname: "{{ item.value.ip }}"
-        esxi_username: "{{ nestedESX.user }}"
-        esxi_password: "{{ nestedESX.password }}"
+        esxi_username: "{{ nested_host_credentials.user }}"
+        esxi_password: "{{ nested_host_credentials.password }}"
         state: present
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
 
-    - name: Add a VMware vSwitch
+    - name: Add TEP Distributed vSwitch
       vmware_vswitch:
-        hostname: '{{ item.value.ip }}'
-        username: '{{ nestedESX.user }}'
-        password: '{{ nestedESX.password }}'   
+        hostname: "{{ item.value.ip }}"
+        username: "{{ nested_host_credentials.user }}"
+        password: "{{ nested_host_credentials.password }}"   
         validate_certs: False
-        switch: 'vSwitch1'
-        nics: 'vmnic1'
+        switch: "vSwitch1"
+        nics: "vmnic1"
         mtu: 1600
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
+      delegate_to: localhost
+      
+    - name: Add TEP Portgroup to all hosts in a cluster
+      vmware_portgroup:
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
+        validate_certs: False
+        cluster_name: "{{ item.key }}"
+        switch_name: "vSwitch1"
+        portgroup_name: "TEP_PG"
+        vlan_id: 0
+      with_dict: "{{ clusters }}"
       delegate_to: localhost
       
     - name: Add Management Network VM Portgroup to all hosts in a cluster
       vmware_portgroup:
-        hostname: "{{ vcenter.ip }}"
-        username: "{{ vcenter.user }}"
-        password: "{{ vcenter.password }}"
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
         validate_certs: False
-        cluster_name: "Compute"
-        switch_name: 'vSwitch1'
-        portgroup_name: 'TEP_PG'
+        cluster_name: "{{ item.key }}"
+        switch_name: "vSwitch0"
+        portgroup_name: "Net1"
         vlan_id: 0
-      delegate_to: localhost
-      
-    - name: Add Management Network VM Portgroup to all hosts in a cluster
-      vmware_portgroup:
-        hostname: "{{ vcenter.ip }}"
-        username: "{{ vcenter.user }}"
-        password: "{{ vcenter.password }}"
-        validate_certs: False
-        cluster_name: "Compute"
-        switch_name: 'vSwitch0'
-        portgroup_name: 'Net1'
-        vlan_id: 0
+      with_dict: "{{ clusters }}"
       delegate_to: localhost

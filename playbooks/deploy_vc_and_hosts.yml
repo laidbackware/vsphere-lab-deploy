@@ -16,7 +16,7 @@
   tasks:
     - name: Check if vCenter already exists so install steps can be skipped
       uri:
-        url: "https://{{ vcenter.ip }}/ui/"
+        url: "https://{{ nested_nested_vcenter.ip }}/ui/"
         method: GET
         status_code: 200
         timeout: 2
@@ -89,12 +89,12 @@
 
     - name: Deploy Nested vESXi VMs
       nestedESXi:
-        vcenter: "{{ vc_mng.ip }}"
+        vcenter: "{{ parent_vcenter.ip }}"
         vmname: "{{ environment_tag }}-{{ item.key }}"
-        vcenter_user: "{{ vc_mng.user }}" 
-        vcenter_passwd: "{{ vc_mng.password }}" 
+        vcenter_user: "{{ parent_vcenter.user }}" 
+        vcenter_passwd: "{{ parent_vcenter.password }}" 
         cluster: "{{ item.value.mng_cluster }}"
-        datastore: "{{ vc_mng.datastore }}" 
+        datastore: "{{ parent_vcenter.datastore }}" 
         vmk_portgroup: "{{ item.value.vmk_portgroup}}" 
         tep_portgroup: "{{ item.value.tep_portgroup}}" ### Must be attached to port group with MTU of 1600+
         cpucount: "{{ item.value.cpu }}"
@@ -118,7 +118,7 @@
       retries: 100
       delay: 15
 
-    - debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under {{tmp_dir}} and follow vcsa-cli-installer.log "
+    - debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{nested_vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under {{tmp_dir}} and follow vcsa-cli-installer.log "
       when: not vcenter_exists
 
     - name: Result check for deployment of vCenter task
@@ -131,7 +131,7 @@
       when: not vcenter_exists
 
     - name: Check the vSphere API is online
-      command: "curl -k --silent -v https://{{ vcenter.ip }}/ui/"
+      command: "curl -k --silent -v https://{{ nested_vcenter.ip }}/ui/"
       register: result
       until: result.stdout.find("<title>vSphere Client</title>") != -1
       retries: 120
@@ -147,19 +147,19 @@
     
     - name: Create Datacenter
       vmware_datacenter:
-        hostname: "{{ vcenter.ip }}"
+        hostname: "{{ nested_vcenter.ip }}"
         username: "administrator@vsphere.local"
-        password: "{{ vcenter.password }}"
-        datacenter_name: "{{ vcenter.datacenter }}"
+        password: "{{ nested_vcenter.password }}"
+        datacenter_name: "{{ nested_vcenter.datacenter }}"
         state: present
         validate_certs: False
         
     - name: Create Clusters
       vmware_cluster:
-        hostname: "{{ vcenter.ip }}"
-        username: "{{ vcenter.user }}"
-        password: "{{ vcenter.password }}"
-        datacenter_name: "{{ vcenter.datacenter }}"
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
+        datacenter_name: "{{ nested_vcenter.datacenter }}"
         cluster_name: "{{ item.key }}"
         validate_certs: False
         enable_ha: False  # Hardcoded as we need to enable HA after vSAN is enabled and disks are claimed

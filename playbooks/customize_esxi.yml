@@ -1,5 +1,5 @@
 ---
-- name: Customize vESX Hosts
+- name: Customize nested_hosts Hosts
   hosts: localhost
   gather_facts: False
   # vars_files:
@@ -14,14 +14,14 @@
         switch: 'vSwitch1'
         nics: 'vmnic1'
         mtu: 1600
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
       delegate_to: localhost
       
     - name: Add Management Network VM Portgroup to all hosts in a cluster
       vmware_portgroup:
-        hostname: "{{ vcenter.ip }}"
-        username: "{{ vcenter.user }}"
-        password: "{{ vcenter.password }}"
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
         validate_certs: False
         cluster_name: "Compute"
         switch_name: 'vSwitch1'
@@ -31,9 +31,9 @@
       
     - name: Add Management Network VM Portgroup to all hosts in a cluster
       vmware_portgroup:
-        hostname: "{{ vcenter.ip }}"
-        username: "{{ vcenter.user }}"
-        password: "{{ vcenter.password }}"
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
         validate_certs: False
         cluster_name: "Compute"
         switch_name: 'vSwitch0'

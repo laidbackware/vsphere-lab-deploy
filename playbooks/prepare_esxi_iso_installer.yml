@@ -66,7 +66,7 @@
         path: '{{tmp_dir}}/ks-esxi/etc/vmware/weasel/KS.CFG'
         block: |
           vmaccepteula
-          rootpw {{nestedESX.password}}
+          rootpw {{nested_host_credentials.password}}
           install --firstdisk --overwritevmfs
           network --bootproto=dhcp --device=vmnic0 --addvmportgroup=0
           reboot
@@ -89,7 +89,7 @@
         chdir: '{{tmp_dir}}/ESX/'
 
     - name: Upload the ISO to the Datastore
-      vsphere_copy: host="{{ vc_mng.ip }}" login="{{ vc_mng.user }}" password="{{ vc_mng.password }}" src={{tmp_dir}}/customesxv.iso datacenter="{{ vc_mng.datacenter }}" datastore="{{ vc_mng.datastore }}" path=/ESXI-ISO/customesxv.iso validate_certs=False
+      vsphere_copy: host="{{ parent_vcenter.ip }}" login="{{ parent_vcenter.user }}" password="{{ parent_vcenter.password }}" src={{tmp_dir}}/customesxv.iso datacenter="{{ parent_vcenter.datacenter }}" datastore="{{ parent_vcenter.datastore }}" path=/ESXI-ISO/customesxv.iso validate_certs=False
       tags: upload
 
   post_tasks:

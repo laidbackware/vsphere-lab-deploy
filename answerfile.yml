@@ -25,7 +25,7 @@ tmp_dir: /tmp/
 #   vswitch: vSwitch0
 
 
-vcenter: # the vCenter appliance that will be deployed
+nested_vcenter: # the vCenter appliance that will be deployed
   ip: '192.168.0.181' # vCenter ip address 
   mask: '24'
   gw: '192.168.0.1'
@@ -40,7 +40,7 @@ vcenter: # the vCenter appliance that will be deployed
   cluster: 'Physical' # Cluster to deploy VM to
   ntp: 0.uk.pool.ntp.org
 
-vc_mng: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
+parent_vcenter: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
   ip: '192.168.0.113' # if you have existing VC already deployed and connected to the physical ESX put the ip address here, otherwise it must be the same as the parameters in vcenter section above
   user: 'administrator@vsphere.local' 
   password: 'Pass123$' 
@@ -55,7 +55,7 @@ clusters: # You can add, remove or rename clusters in this section, you can spec
     vsan: False
 
 # You can add, remove or rename the nested ESXi below, in this example the names will be esx1, esx2, etc ...
-vESX:
+nested_hosts:
   esx1: # environment_tag will prepend the name
     ip: 192.168.0.182
     mask: 255.255.255.0
