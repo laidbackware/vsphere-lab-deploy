@@ -101,7 +101,7 @@
         memory: "{{ item.value.ram }}"
         hdd: "{{ item.value.hdd }}"
         isopath: "ESXI-ISO/customesxv.iso"
-      with_dict: "{{ vESX }}"
+      with_dict: "{{ nested_hosts }}"
       async: 7200
       poll: 0
       register: hosts
