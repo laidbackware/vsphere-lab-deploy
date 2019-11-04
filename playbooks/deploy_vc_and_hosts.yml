@@ -5,10 +5,6 @@
   # vars_files:
   #   - ../answerfile.yml
   pre_tasks:
-  #   - name: Ensure fuseiso is intalled
-  #     package:
-  #       name: fuseiso
-  #       state: present
     - name: Ensure xorriso is installed
       package:
         name: xorriso
@@ -26,23 +22,6 @@
 
     - set_fact:
         vcenter_exists={{vcenter_response.status == 200}}
-
-    # - name: Mount VC installer
-    #   action: mount name='{{tmp_dir}}/VCSA' src="{{ vcIso }}" opts=loop fstype=iso9660 state=mounted
-    #   tags: mount
-    #   when: not vcenter_exists
-
-    # - name: Create VCSA ISO Directory
-    #   file:
-    #     path: '{{tmp_dir}}/VCSA'
-    #     state: directory
-    
-    # - name: Ensure mount point is empty in case of previous failed runs
-    #   command: fusermount -u {{tmp_dir}}/VCSA
-    #   ignore_errors: yes
-
-    # - name: Mount VC Install with Fuse ISO
-    #   command: fuseiso {{vcIso}} {{tmp_dir}}/VCSA
 
     - name: Fix permissions before delete
       command: chmod -R +w {{tmp_dir}}/VCSA
@@ -63,7 +42,6 @@
       command: "{{item}}"
       with_items:
         - chmod -R 777 {{tmp_dir}}/VCSA
-        # - find {{tmp_dir}}/VCSA -type f -exec chmod -c 0644 {} \;
       when: not vcenter_exists
 
     - name: Create JSON template file for VCSA 6.5 with embeded PSC
@@ -142,8 +120,6 @@
     - name: Wait 30 seconds for the vCenter to settle
       pause: seconds=30
       when: not vcenter_exists
-
-    
     
     - name: Create Datacenter
       vmware_datacenter:
@@ -162,25 +138,12 @@
         datacenter_name: "{{ nested_vcenter.datacenter }}"
         cluster_name: "{{ item.key }}"
         validate_certs: False
-        enable_ha: False  # Hardcoded as we need to enable HA after vSAN is enabled and disks are claimed
+        enable_ha: False 
         enable_drs: "{{ item.value.drs }}"
-        enable_vsan: False  # Hardcoded as we need to enable vSAN when the hosts are added to the cluster
+        enable_vsan: False
       with_dict: "{{ clusters }}"
 
   post_tasks:
-    - name: Unmount VCSA installer
-      action: mount name='{{tmp_dir}}/VCSA' src="{{ vcIso }}" fstype=iso9660 state=absent
-      when: not vcenter_exists
-    
-    # - name: Unmount VSCA install with fuse
-    #   command: fusermount -u {{tmp_dir}}/VCSA
-    #   ignore_errors: yes
-
-    # - name: Clean VCSA ISO Directory
-    #   file:
-    #     path: '{{tmp_dir}}/VCSA/'
-    #     state: absent
-
     - name: Delete the temporary JSON template file
       file: 
         path: '{{tmp_dir}}/vCSA_on_ESXi.json' 
