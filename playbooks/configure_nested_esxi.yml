@@ -233,7 +233,7 @@
         validate_certs: False
         cluster_name: "{{ item.key }}"
         switch_name: "vSwitch1"
-        portgroup_name: "TEP_PG"
+        portgroup_name: "{{ nested_network_names.tep_pg }}"
         vlan_id: 0
       with_dict: "{{ clusters }}"
       delegate_to: localhost
@@ -246,7 +246,7 @@
         validate_certs: False
         cluster_name: "{{ item.key }}"
         switch_name: "vSwitch0"
-        portgroup_name: "Net1"
+        portgroup_name: "{{ nested_network_names.main_pg }}"
         vlan_id: 0
       with_dict: "{{ clusters }}"
       delegate_to: localhost

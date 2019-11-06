@@ -71,6 +71,10 @@ nested_hosts:
     vmotion_ip: 172.16.122.1 
     vsan_ip: 172.16.123.1 # even if you dont need vSAN put an IP address here otherwise the install will fail
 
+nested_network_names:
+  main_pg: net1
+  tep_pg: tep_pg
+
 # configuration for accessing the existing physical ESXi
 # physicalESX:
 #   host: '192.168.0.150' 
