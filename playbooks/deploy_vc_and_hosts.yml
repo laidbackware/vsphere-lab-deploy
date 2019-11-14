@@ -71,7 +71,7 @@
         vmname: "{{ environment_tag }}-{{ item.key }}"
         vcenter_user: "{{ parent_vcenter.user }}" 
         vcenter_passwd: "{{ parent_vcenter.password }}" 
-        cluster: "{{ item.value.mng_cluster }}"
+        cluster: "{{ item.value.parent_cluster }}"
         datastore: "{{ parent_vcenter.datastore }}" 
         vmk_portgroup: "{{ item.value.vmk_portgroup}}" 
         tep_portgroup: "{{ item.value.tep_portgroup}}" ### Must be attached to port group with MTU of 1600+

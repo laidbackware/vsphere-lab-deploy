@@ -224,7 +224,10 @@
         mtu: 1600
       with_dict: "{{ nested_hosts }}"
       delegate_to: localhost
-      
+
+    - name: Wait 5 seconds before creating port group
+      pause: seconds=5
+
     - name: Add TEP Portgroup to all hosts in a cluster
       vmware_portgroup:
         hostname: "{{ nested_vcenter.ip }}"
@@ -249,4 +252,17 @@
         portgroup_name: "{{ nested_network_names.main_pg }}"
         vlan_id: 0
       with_dict: "{{ clusters }}"
+      delegate_to: localhost
+
+    - name: Add resource pool to vCenter
+      vmware_resource_pool:
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
+        validate_certs: False
+        datacenter: '{{ nested_vcenter.datacenter }}'
+        cluster: '{{ nested_hsots.esx1.cluster }}'
+        resource_pool: '{{ item.value }}'
+        state: present
+      with_dict: "{{ resource_pools }}"
       delegate_to: localhost

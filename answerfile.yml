@@ -1,84 +1,67 @@
 # path to the ESXi Installer ISO
-# esxIso: '/home/ubuntu/ISOs/ESXi-6.5.0-20190104001.iso'
 esxIso: '/data/ISOs/ESXi670-201903001.iso'
 # path to vCenter installer ISO
-# vcIso: '/home/ubuntu/ISOs/VMware-VCSA-all-6.5.0-10964411.iso'
 vcIso: '/data/ISOs/VMware-VCSA-all-6.7.0-11726888.iso'
+tmp_dir: /tmp/
 
-environment_tag: 'nsxt-lab1' # Used to name objects
+environment_tag: 'nsxt-lab1' # Used to prepend object names
 dns1: '192.168.0.110'
 dns2: '192.168.0.1'
 domain: 'home.local'
 
-nestedESX:
+nested_host_credentials: # Credentials set in kickstart file inside the custom ISO
   user: 'root' 
-  password: 'Pass123$' 
-
-tmp_dir: /tmp/
-
-# configuration for accessing the existing physical ESXi
-# physicalESX:
-#   host: '192.168.0.150' 
-#   user: 'root' 
-#   password: 'Pass123$' 
-#   vlan: 0
-#   vswitch: vSwitch0
-
+  password: 'VMware1!' 
 
 nested_vcenter: # the vCenter appliance that will be deployed
   ip: '192.168.0.181' # vCenter ip address 
   mask: '24'
   gw: '192.168.0.1'
-  network: 'Net1' # this portGroup will be created on the pESX with the vlan id specified in the physicalESX section
+  
   host_name: '192.168.0.181' # FQDN if there is working DNS server, otherwise put the ip as a name
   thin: true
   user: 'administrator@vsphere.local' 
-  password: 'Pass123$' 
+  password: 'VMware1!' 
   sso_domain: 'vsphere.local'
   datacenter: 'Lab' # DC to create after deployment
-  datastore: 'SSD' # Datastore name where the vCenter VM will be deployed
-  cluster: 'Physical' # Cluster to deploy VM to
   ntp: 0.uk.pool.ntp.org
+  # Below are properties of parent cluster
+  network: 'Net1' # Parent port group where the vCenter VM will be deployed
+  datastore: 'SSD' # Parent datastore where the vCenter VM will be deployed
+  cluster: 'Physical' # Parent cluster where the vCenter VM will be deployed
+
 
 parent_vcenter: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
-  ip: '192.168.0.113' # if you have existing VC already deployed and connected to the physical ESX put the ip address here, otherwise it must be the same as the parameters in vcenter section above
+  ip: '192.168.0.113'
   user: 'administrator@vsphere.local' 
-  password: 'Pass123$' 
-  datacenter: 'Home' # DC deploy all VMs to
-  datastore: 'SSD' # Datastore used to for nested ESXi hosts
+  password: 'VMware1!' 
+  datacenter: 'Home' # Target for all VM deployment
+  datastore: 'SSD' # Datastore target for nested ESXi VMs
 
-clusters: # You can add, remove or rename clusters in this section, you can specify to which cluster specific nested ESXi to be connected to
-# Do not change ha and vsan to True untill I fix a bug. It is better to go and enable first vSAN and HA after the deployment is done
-  Compute:
-    ha: False
+clusters: # You can add, remove or rename clusters in this section
+  compute:
     drs: True
-    vsan: False
 
-# You can add, remove or rename the nested ESXi below, in this example the names will be esx1, esx2, etc ...
+# You can add, remove or rename the nested ESXi below
 nested_hosts:
   esx1: # environment_tag will prepend the name
     ip: 192.168.0.182
     mask: 255.255.255.0
     gw: 192.168.0.1
-    mng_cluster: 'Physical' # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
-    cluster: Compute # the cluster where this specific nested ESXi need to be connected to
-    vlan: 0 # the external vlan id, need to have connectivity with the vCener
+    cluster: compute # the nested vcenter cluster, which is defined in the clusters section.
+    vlan: 0 # the external vlan id, need to have connectivity with the vCenter
     cpu: 4 # CPU count
     ram: 65516 # memory
+    hdd: 500 # in GB. Disk to be used for boot an local datastore
+    # Below are properties of parent cluster
+    parent_cluster: 'Physical' # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
     vmk_portgroup: 'Nest' # Added this and updated the deployNestedESXi.yml
     tep_portgroup: 'TEP' # 
-    hdd: 500 # there is one HDD 8GB by default where the ESXi OS is installed. Additional one is SSD emulated drive configured half of the value here, and third HDD is according the value here
-    vmotion_ip: 172.16.122.1 
-    vsan_ip: 172.16.123.1 # even if you dont need vSAN put an IP address here otherwise the install will fail
-
+    
 nested_network_names:
   main_pg: net1
   tep_pg: tep_pg
 
-# configuration for accessing the existing physical ESXi
-# physicalESX:
-#   host: '192.168.0.150' 
-#   user: 'root' 
-#   password: 'Pass123$' 
-#   vlan: 0
-#   vswitch: vSwitch0
+resource_pools:
+  pas: PAS-AZ1
+  pks: PKS-AZ1
