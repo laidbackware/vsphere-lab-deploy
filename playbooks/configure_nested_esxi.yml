@@ -261,7 +261,7 @@
         password: "{{ nested_vcenter.password }}"
         validate_certs: False
         datacenter: '{{ nested_vcenter.datacenter }}'
-        cluster: '{{ nested_hsots.esx1.cluster }}'
+        cluster: '{{ nested_hosts.esx1.cluster }}'
         resource_pool: '{{ item.value }}'
         state: present
       with_dict: "{{ resource_pools }}"
