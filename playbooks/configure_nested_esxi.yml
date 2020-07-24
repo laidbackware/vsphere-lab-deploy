@@ -225,8 +225,8 @@
       with_dict: "{{ nested_hosts }}"
       delegate_to: localhost
 
-    - name: Wait 5 seconds before creating port group
-      pause: seconds=5
+    - name: Wait 10 seconds before creating port group
+      pause: seconds=10
 
     - name: Add TEP Portgroup to all hosts in a cluster
       vmware_portgroup:
