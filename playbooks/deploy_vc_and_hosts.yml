@@ -56,6 +56,12 @@
         dest={{tmp_dir}}/vCSA_on_ESXi.json
       when: vcIso is search("-6.7.") and not vcenter_exists
 
+    - name: Create JSON template file for VCSA 7.0 with embeded PSC
+      template: 
+        src=../templates/embedded_vCSA_on_VC_7.0.json
+        dest={{tmp_dir}}/vCSA_on_ESXi.json
+      when: vcIso is search("-7.0.") and not vcenter_exists
+
     - name: Perform VC CLI Install
       command: "./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
       args:
