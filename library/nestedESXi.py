@@ -57,9 +57,12 @@ def connect_to_api(vchost, vc_user, vc_pwd):
             raise Exception(e)
     return service_instance.RetrieveContent()
 
-def add_scsi_controller():
-    sharedBus = vim.vm.device.VirtualSCSIController.Sharing.noSharing
-    device = vim.vm.device.VirtualLsiLogicSASController(sharedBus=vim.vm.device.VirtualSCSIController.Sharing.noSharing)
+def add_scsi_controller(esxi_version):
+    # sharedBus = vim.vm.device.VirtualSCSIController.Sharing.noSharing
+    if esxi_version >= 7:
+        device = vim.vm.device.ParaVirtualSCSIController(sharedBus=vim.vm.device.VirtualSCSIController.Sharing.noSharing)
+    else:
+        device = vim.vm.device.VirtualLsiLogicSASController(sharedBus=vim.vm.device.VirtualSCSIController.Sharing.noSharing)
     virtual_scsi_spec = vim.vm.device.VirtualDeviceSpec()
     virtual_scsi_spec.device = device
     virtual_scsi_spec.operation = "add"
@@ -83,7 +86,7 @@ def create_virtual_disk(capacity, controller_key, unit_number, in_bytes=False):
     virtual_disk_spec.operation = "add"
     return virtual_disk_spec
 
-def createNIC(content, portGroup):
+def create_nic(content, portGroup):
     nic_spec = vim.vm.device.VirtualDeviceSpec()
     nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
     nic_spec.device = vim.vm.device.VirtualE1000e()
@@ -125,7 +128,7 @@ def get_obj(content, vimtype, name):
             break
     return obj
 
-def createCdrom(content, datastore, dataStorePath):
+def create_cd_rom(content, datastore, dataStorePath):
     cdspec = vim.vm.device.VirtualDeviceSpec()
     cdspec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
     cdspec.device = vim.vm.device.VirtualCdrom()
@@ -184,7 +187,7 @@ def wait_for_tasks(tasks):
         if pcfilter:
             pcfilter.Destroy()
 
-def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memory, dataStorePath, hdd_size, tep_portGroup):
+def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memory, dataStorePath, hdd_size, tep_portGroup, esxi_v7):
     datacenter = content.rootFolder.childEntity[0]
     vmfolder = datacenter.vmFolder
     hosts = datacenter.hostFolder.childEntity
@@ -199,14 +202,14 @@ def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memo
     #disk_spec2 = create_virtual_disk(new_disk_kb/2, 0, 1, False)
     #disk_spec3 = create_virtual_disk(new_disk_kb, 0, 2, False)
 
-    scsi_spec = add_scsi_controller()
-    nic0_spec = createNIC(content, vmk_portgroup)
-    nic1_spec = createNIC(content, tep_portGroup)
-    nic2_spec = createNIC(content, tep_portGroup)
-    #nic3_spec = createNIC(content, tep_portGroup, False) # 
-    #nic4_spec = createNIC(content, tep_portGroup, False)
+    scsi_spec = add_scsi_controller(esxi_v7)
+    nic0_spec = create_nic(content, vmk_portgroup)
+    nic1_spec = create_nic(content, tep_portGroup)
+    nic2_spec = create_nic(content, tep_portGroup)
+    #nic3_spec = create_nic(content, tep_portGroup, False) # 
+    #nic4_spec = create_nic(content, tep_portGroup, False)
 
-    cdrom = createCdrom(content, datastore, dataStorePath)
+    cdrom = create_cd_rom(content, datastore, dataStorePath)
     dev_changes.append(cdrom)
     dev_changes.append(scsi_spec)
     dev_changes.append(disk_spec)
@@ -258,7 +261,8 @@ def main():
             cpucount=dict(required=True, type='int'),
             memory=dict(required=True, type='int'),
             isopath=dict(required=True, type='str'),
-            hdd=dict(required=True, type='int')
+            hdd=dict(required=True, type='int'),
+            esxi_version=dict(required=False, type='float', default=6.7)
         ),
         supports_check_mode=True,
     )
@@ -275,7 +279,10 @@ def main():
         return 0
     if module.check_mode:
         module.exit_json(changed=True, debug_out="Test Debug out, Yasen !!!")
-    result = create_vm(module.params['vmname'], content, module.params['cluster'], module.params['datastore'], module.params['vmk_portgroup'], module.params['cpucount'], module.params['memory'], module.params['isopath'], module.params['hdd'], module.params['tep_portgroup'])
+    result = create_vm(module.params['vmname'], content, module.params['cluster'], module.params['datastore'],
+                                             module.params['vmk_portgroup'], module.params['cpucount'], module.params['memory'], 
+                                             module.params['isopath'], module.params['hdd'], module.params['tep_portgroup'], 
+                                             module.params['esxi_version'])
     if result != 0:
         module.fail_json(msg='Failed to deploy nested ESXi vm with name {}'.format(module.params['vmname']))
     module.exit_json(changed=True, result=module.params['vmname'] + " created")
