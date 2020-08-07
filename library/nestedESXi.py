@@ -59,7 +59,7 @@ def connect_to_api(vchost, vc_user, vc_pwd):
 
 def add_scsi_controller(esxi_version):
     # sharedBus = vim.vm.device.VirtualSCSIController.Sharing.noSharing
-    if esxi_version >= 7:
+    if esxi_version >= 7.0:
         device = vim.vm.device.ParaVirtualSCSIController(sharedBus=vim.vm.device.VirtualSCSIController.Sharing.noSharing)
     else:
         device = vim.vm.device.VirtualLsiLogicSASController(sharedBus=vim.vm.device.VirtualSCSIController.Sharing.noSharing)
@@ -262,10 +262,15 @@ def main():
             memory=dict(required=True, type='int'),
             isopath=dict(required=True, type='str'),
             hdd=dict(required=True, type='int'),
-            esxi_version=dict(required=False, type='float', default=6.7)
+            esxi_version=dict(required=False, type='str', default="6.7")
         ),
         supports_check_mode=True,
     )
+    # Ensure that esxi_version can be converted to a float to support being passed in as an env var
+    try:
+        esxi_version = float(module.params['esxi_version'])
+    except ValueError:
+        module.fail_json(msg='Error evaluating ESXi version %s. Must be passed in as a float. E.g 6.7.' %  module.params['esxi_version'])
     try:
         content = connect_to_api(module.params['vcenter'], module.params['vcenter_user'],
                                  module.params['vcenter_passwd'])
@@ -282,7 +287,7 @@ def main():
     result = create_vm(module.params['vmname'], content, module.params['cluster'], module.params['datastore'],
                                              module.params['vmk_portgroup'], module.params['cpucount'], module.params['memory'], 
                                              module.params['isopath'], module.params['hdd'], module.params['tep_portgroup'], 
-                                             module.params['esxi_version'])
+                                             esxi_version)
     if result != 0:
         module.fail_json(msg='Failed to deploy nested ESXi vm with name {}'.format(module.params['vmname']))
     module.exit_json(changed=True, result=module.params['vmname'] + " created")
