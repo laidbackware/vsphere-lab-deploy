@@ -187,7 +187,7 @@ def wait_for_tasks(tasks):
         if pcfilter:
             pcfilter.Destroy()
 
-def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memory, dataStorePath, hdd_size, tep_portGroup, esxi_v7):
+def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memory, dataStorePath, hdd_size, tep_portGroup, esxi_version):
     datacenter = content.rootFolder.childEntity[0]
     vmfolder = datacenter.vmFolder
     hosts = datacenter.hostFolder.childEntity
@@ -202,7 +202,7 @@ def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memo
     #disk_spec2 = create_virtual_disk(new_disk_kb/2, 0, 1, False)
     #disk_spec3 = create_virtual_disk(new_disk_kb, 0, 2, False)
 
-    scsi_spec = add_scsi_controller(esxi_v7)
+    scsi_spec = add_scsi_controller(esxi_version)
     nic0_spec = create_nic(content, vmk_portgroup)
     nic1_spec = create_nic(content, tep_portGroup)
     nic2_spec = create_nic(content, tep_portGroup)
