@@ -84,8 +84,8 @@
         cpucount: "{{ item.value.cpu }}"
         memory: "{{ item.value.ram }}"
         hdd: "{{ item.value.hdd }}"
-        isopath: "ESXI-ISO/customesxv.iso"
-        esxi_version: "{{ item.value.esxi_version }}" 
+        isopath: "ESXI-ISO/custom-esx-{{ vsphere_version }}.iso"
+        esxi_version: "{{ vsphere_version }}" 
       with_dict: "{{ nested_hosts }}"
       async: 7200
       poll: 0

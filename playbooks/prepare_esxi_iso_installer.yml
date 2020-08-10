@@ -89,7 +89,7 @@
         chdir: '{{tmp_dir}}/ESX/'
 
     - name: Upload the ISO to the Datastore
-      vsphere_copy: host="{{ parent_vcenter.ip }}" login="{{ parent_vcenter.user }}" password="{{ parent_vcenter.password }}" src={{tmp_dir}}/customesxv.iso datacenter="{{ parent_vcenter.datacenter }}" datastore="{{ parent_vcenter.datastore }}" path=/ESXI-ISO/customesxv.iso validate_certs=False
+      vsphere_copy: host="{{ parent_vcenter.ip }}" login="{{ parent_vcenter.user }}" password="{{ parent_vcenter.password }}" src={{tmp_dir}}/customesxv.iso datacenter="{{ parent_vcenter.datacenter }}" datastore="{{ parent_vcenter.datastore }}" path=/ESXI-ISO/custom-esx-{{vsphere_version}}.iso validate_certs=False
       tags: upload
 
   post_tasks:
