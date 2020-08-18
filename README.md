@@ -11,7 +11,7 @@ Main differences to upstream masters:
 - Updated Ansible playbook to remove Ansible features which will be depricated.
 - Refactored prepare ISO to not need root and dynamically generate the KS file
 
-Validated on Ubuntu 16.04 with Ansible 2.9.
+Validated on Ubuntu 18.04 and 20.04 with Ansible 2.9.
 
 ## Fork Todo
 Fix prepare_iso task so that a proper error is generated if the ISO is in use.
