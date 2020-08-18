@@ -1,4 +1,4 @@
-# vsphere-nsx-lab-deploy
+# vsphere-lab-deploy
 Ansible playbook to automate deployment of vCenter, nested ESXi hosts
 
 # Fork
@@ -11,7 +11,7 @@ Main differences to upstream masters:
 - Updated Ansible playbook to remove Ansible features which will be depricated.
 - Refactored prepare ISO to not need root and dynamically generate the KS file
 
-Validated on Ubuntu 18.04 and 20.04 with Ansible 2.9.
+Validated on Ubuntu 18.04 and 20.04 with Ansible 2.9 against vSphere 6.7 and 7.0.
 
 ## Fork Todo
 Fix prepare_iso task so that a proper error is generated if the ISO is in use.
@@ -48,6 +48,8 @@ git clone https://github.com/yasensim/vsphere-nsx-lab-deploy.git <br/>
 
 Place the ESXi and VCSA ISOs in the directory matching the yaml <br/>
 
+The vCenter server must be able to contact an NTP server either in your network or via the internet. <br/>
+
 
 ### Edit answersfile.yml
 
@@ -69,12 +71,20 @@ ansible-playbook playbooks/prepare_esxi_iso_installer.yml \
 ansible-playbook deploy.yml --extra-vars="@answerfile.yml"  --extra-vars "tmp_dir=${TMPDIR}"
 ```
 
+## Troubleshooting
+### The prepare_esi_iso playbook fails on the upload step
+The ISO file is likely in use by a VM. Try unmounting the ISO from all VMs.
+As a test you can try and delete it from the datastore.
+
+### The ESXi server creation times out
+Try connecting to the console of the ESXi VM to check for errors.
+
+### The vCenter deployment is taking a long time
+The vCenter deployment usually takes 20+ minutes. 
+You can check the progress at https://[vCenter IP]:5480
+
 ## Limitations
 Ansible => 2.7 is required <br/>
 ESXi version 6.0 and above is supported <br/>
 VCSA version 6.0U2 and above is supported <br/>
-
-## Development
-TODO: External PSC for vSphere 6.5
-VMware internal
 
