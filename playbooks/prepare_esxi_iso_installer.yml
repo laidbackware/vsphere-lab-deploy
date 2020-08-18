@@ -2,8 +2,6 @@
 - name: Prepare ESXi installer ISO
   hosts: localhost
   gather_facts: False
-  # vars_files:
-  #   - ../answerfile.yml
   pre_tasks:
     - name: Ensure xorriso is intalled
       package:
@@ -34,36 +32,22 @@
       replace:
         dest: '{{tmp_dir}}/ESX/boot.cfg'
         regexp: 'kernelopt=runweasel'
-        replace: 'kernelopt=ks=file://etc/vmware/weasel/KS.CFG'
+        replace: 'kernelopt=ks=cdrom:/KS.CFG'
 
     - name: Edit boot.cfg for post 6.7
       replace:
         dest: '{{tmp_dir}}/ESX/boot.cfg'
         regexp: 'kernelopt=cdromBoot runweasel'
-        replace: 'kernelopt=cdromBoot ks=file://etc/vmware/weasel/KS.CFG'
-
-    - name: insert customks.tgz in boot.cfg modules section
-      replace:
-        dest: '{{tmp_dir}}/ESX/boot.cfg'
-        regexp: 'imgpayld.tgz$'
-        replace: 'imgpayld.tgz --- /customks.tgz'
-
-    - name: Clean KS temp dir path
-      file:
-        state: absent
-        path: '{{tmp_dir}}/ks-esxi/'
-
-    - name: Ensure KS temp dir exists
-      file: path={{tmp_dir}}/ks-esxi/etc/vmware/weasel state=directory
+        replace: 'kernelopt=cdromBoot ks=cdrom:/KS.CFG'
 
     - name: Create empty KS file
       file:
-        path: '{{tmp_dir}}/ks-esxi/etc/vmware/weasel/KS.CFG'
+        path: '{{tmp_dir}}/ESX/KS.CFG'
         state: touch
 
     - name: Update KS file
       blockinfile:
-        path: '{{tmp_dir}}/ks-esxi/etc/vmware/weasel/KS.CFG'
+        path: '{{tmp_dir}}/ESX/KS.CFG'
         block: |
           vmaccepteula
           rootpw {{nested_host_credentials.password}}
@@ -76,12 +60,6 @@
           vim-cmd hostsvc/start_ssh
           vim-cmd hostsvc/enable_esx_shell
           vim-cmd hostsvc/start_esx_shell
-
-    - name: Create the custom kickstart tgz file
-      archive:
-        path: '{{tmp_dir}}/ks-esxi/'
-        dest: '{{tmp_dir}}/ESX/customks.tgz'
-        format: gz
 
     - name: Burn an ISO image
       command: xorrisofs -relaxed-filenames -J -R -o {{tmp_dir}}/customesxv.iso -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table {{tmp_dir}}/ESX/

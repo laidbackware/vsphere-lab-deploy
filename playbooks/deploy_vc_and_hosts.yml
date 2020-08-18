@@ -2,14 +2,33 @@
 - name: Deploy VC and Hosts
   hosts: localhost
   gather_facts: False
-  # vars_files:
-  #   - ../answerfile.yml
   pre_tasks:
     - name: Ensure xorriso is installed
       package:
         name: xorriso
         state: present  
   tasks:
+
+    - name: Deploy Nested vESXi VMs
+      nestedESXi:
+        vcenter: "{{ parent_vcenter.ip }}"
+        vmname: "{{ environment_tag }}-{{ item.key }}"
+        vcenter_user: "{{ parent_vcenter.user }}" 
+        vcenter_passwd: "{{ parent_vcenter.password }}" 
+        cluster: "{{ item.value.parent_cluster }}"
+        datastore: "{{ parent_vcenter.datastore }}" 
+        vmk_portgroup: "{{ item.value.vmk_portgroup}}" 
+        tep_portgroup: "{{ item.value.tep_portgroup}}" ### Must be attached to port group with MTU of 1600+
+        cpucount: "{{ item.value.cpu }}"
+        memory: "{{ item.value.ram }}"
+        hdd: "{{ item.value.hdd }}"
+        isopath: "ESXI-ISO/custom-esx-{{ vsphere_version }}.iso"
+        esxi_version: "{{ vsphere_version }}" 
+      with_dict: "{{ nested_hosts }}"
+      async: 7200
+      poll: 0
+      register: hosts
+      
     - name: Check if vCenter already exists so install steps can be skipped
       uri:
         url: "https://{{ nested_vcenter.ip }}/ui/"
@@ -28,17 +47,17 @@
       ignore_errors: yes
       when: not vcenter_exists
 
-    - name: Clean ESX ISO Directory
+    - name: Clean VCSA ISO Directory
       file:
         path: '{{tmp_dir}}/VCSA'
         state: absent
       when: not vcenter_exists
 
-    - name: Extract ISO image
+    - name: Extract VCSA ISO image
       command: xorriso -ecma119_map lowercase -osirrox on -indev {{vcIso}} -extract / {{tmp_dir}}/VCSA
       when: not vcenter_exists
 
-    - name: Fix permissions
+    - name: Fix VCSA directory permissions
       command: "{{item}}"
       with_items:
         - chmod -R 777 {{tmp_dir}}/VCSA
@@ -70,29 +89,6 @@
       async: 3600
       poll: 0
       register: vcenter_result
-
-    - name: Deploy Nested vESXi VMs
-      nestedESXi:
-        vcenter: "{{ parent_vcenter.ip }}"
-        vmname: "{{ environment_tag }}-{{ item.key }}"
-        vcenter_user: "{{ parent_vcenter.user }}" 
-        vcenter_passwd: "{{ parent_vcenter.password }}" 
-        cluster: "{{ item.value.parent_cluster }}"
-        datastore: "{{ parent_vcenter.datastore }}" 
-        vmk_portgroup: "{{ item.value.vmk_portgroup}}" 
-        tep_portgroup: "{{ item.value.tep_portgroup}}" ### Must be attached to port group with MTU of 1600+
-        cpucount: "{{ item.value.cpu }}"
-        memory: "{{ item.value.ram }}"
-        hdd: "{{ item.value.hdd }}"
-        isopath: "ESXI-ISO/custom-esx-{{ vsphere_version }}.iso"
-        esxi_version: "{{ vsphere_version }}" 
-      with_dict: "{{ nested_hosts }}"
-      async: 7200
-      poll: 0
-      register: hosts
-
-    - name: Wait 5 seconds before start checking wheter the hosts are ready
-      pause: seconds=5
 
     - name: Result check for deployment of host
       async_status:
@@ -156,7 +152,7 @@
         path: '{{tmp_dir}}/vCSA_on_ESXi.json' 
         state: absent
 
-    - name: Clean ESX ISO Directory
+    - name: Clean VCSA ISO Directory
       file:
         path: '{{tmp_dir}}/VCSA/'
         state: absent
