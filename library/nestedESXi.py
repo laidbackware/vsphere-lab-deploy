@@ -187,7 +187,8 @@ def wait_for_tasks(tasks):
         if pcfilter:
             pcfilter.Destroy()
 
-def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memory, dataStorePath, hdd_size, tep_portGroup, esxi_version):
+def create_vm(module, vmName, content, clusterName, datastore, vmnic_physical_portgroup_assignment, CPUs, memory, \
+                                dataStorePath, disk_sizes_in_gb, esxi_version):
     datacenter = content.rootFolder.childEntity[0]
     vmfolder = datacenter.vmFolder
     hosts = datacenter.hostFolder.childEntity
@@ -196,30 +197,31 @@ def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memo
     datastore_path = "[" + datastore + "]" + vmName
     vmx_file = vim.vm.FileInfo(logDirectory=None, snapshotDirectory=None, suspendDirectory=None, vmPathName=datastore_path)
     dev_changes = []
-    disk_size = 1
-    new_disk_kb = int(disk_size) * 1024 * 1024 * hdd_size
-    disk_spec = create_virtual_disk(new_disk_kb, 0, 0, False)
+    # disk_size = 1
+    # new_disk_kb = int(disk_size) * 1024 * 1024 * hdd_size
+    # disk_spec = create_virtual_disk(new_disk_kb, 0, 0, False)
     #disk_spec2 = create_virtual_disk(new_disk_kb/2, 0, 1, False)
     #disk_spec3 = create_virtual_disk(new_disk_kb, 0, 2, False)
 
+    for idx, disk in enumerate(disk_sizes_in_gb):
+        if not isinstance(disk, int):
+            module.fail_json(msg='Error adding disks to %s. Disk position %s is not a valid integetr' % (vmName, str(idx)))
+        new_disk_kb = 1024 * 1024 * disk
+        disk_spec = create_virtual_disk(new_disk_kb, 0, 0, False)
+        dev_changes.append(disk_spec)
+        ssdOption = vim.option.OptionValue(key='scsi0:%s.virtualSSD' % idx,value='1')
+
     scsi_spec = add_scsi_controller(esxi_version)
-    nic0_spec = create_nic(content, vmk_portgroup)
-    nic1_spec = create_nic(content, tep_portGroup)
-    nic2_spec = create_nic(content, tep_portGroup)
-    #nic3_spec = create_nic(content, tep_portGroup, False) # 
-    #nic4_spec = create_nic(content, tep_portGroup, False)
+
+    for vmnic in vmnic_physical_portgroup_assignment:
+        #TODO check that the networks exist
+        nic_spec = create_nic(content, vmnic)
+        dev_changes.append(nic_spec)
 
     cdrom = create_cd_rom(content, datastore, dataStorePath)
     dev_changes.append(cdrom)
     dev_changes.append(scsi_spec)
-    dev_changes.append(disk_spec)
-    #dev_changes.append(disk_spec2)
-    #dev_changes.append(disk_spec3)
-    dev_changes.append(nic0_spec)
-    dev_changes.append(nic1_spec)
-    dev_changes.append(nic2_spec)
-    #dev_changes.append(nic3_spec)
-    #dev_changes.append(nic4_spec)
+    
 
     config = vim.vm.ConfigSpec(
                               name=vmName,
@@ -232,7 +234,7 @@ def create_vm(vmName, content, clusterName, datastore, vmk_portgroup, CPUs, memo
                               version='vmx-11'
                             ) 
     config.deviceChange = dev_changes
-    ssdOption = vim.option.OptionValue(key='scsi0:0.virtualSSD',value='1')
+    # ssdOption = vim.option.OptionValue(key='scsi0:0.virtualSSD',value='1')
     config.extraConfig  = [ssdOption]
 
     task = vmfolder.CreateVM_Task(config=config, pool=resource_pool)
@@ -256,12 +258,12 @@ def main():
             vcenter_passwd=dict(required=True, type='str', no_log=True),
             cluster=dict(required=True, type='str'),
             datastore=dict(required=True, type='str'),
-            vmk_portgroup=dict(required=True, type='str'),
-            tep_portgroup=dict(required=True, type='str'),
+            vmnic_physical_portgroup_assignment=dict(required=True, type='list'),
             cpucount=dict(required=True, type='int'),
             memory=dict(required=True, type='int'),
             isopath=dict(required=True, type='str'),
-            hdd=dict(required=True, type='int'),
+            # hdd=dict(required=True, type='int'),
+            disk_sizes_in_gb=dict(required=True, type='list'),
             esxi_version=dict(required=False, type='str', default="6.7")
         ),
         supports_check_mode=True,
@@ -284,10 +286,10 @@ def main():
         return 0
     if module.check_mode:
         module.exit_json(changed=True, debug_out="Test Debug out, Yasen !!!")
-    result = create_vm(module.params['vmname'], content, module.params['cluster'], module.params['datastore'],
-                                             module.params['vmk_portgroup'], module.params['cpucount'], module.params['memory'], 
-                                             module.params['isopath'], module.params['hdd'], module.params['tep_portgroup'], 
-                                             esxi_version)
+    result = create_vm(module, module.params['vmname'], content, module.params['cluster'], module.params['datastore'],
+                                             module.params['vmnic_physical_portgroup_assignment'], module.params['cpucount'], module.params['memory'], 
+                                             module.params['isopath'], module.params['disk_sizes_in_gb'],  
+                                             esxi_version)  # module.params['tep_portgroup'], 
     if result != 0:
         module.fail_json(msg='Failed to deploy nested ESXi vm with name {}'.format(module.params['vmname']))
     module.exit_json(changed=True, result=module.params['vmname'] + " created")

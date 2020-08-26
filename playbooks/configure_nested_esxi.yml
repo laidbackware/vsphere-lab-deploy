@@ -2,10 +2,8 @@
 - name: Configure nested_hosts
   hosts: localhost
   gather_facts: False
-  # vars_files:
-  #   - ../answerfile.yml
   tasks:
-    - name: Change nested_hostsi hostnames
+    - name: Change nested_host hostnames
       vmware_vm_shell:
         hostname: "{{ parent_vcenter.ip }}"
         username: "{{ parent_vcenter.user }}"
@@ -45,7 +43,7 @@
         vm_username: "{{ nested_host_credentials.user }}"
         vm_password: "{{ nested_host_credentials.password }}"
         vm_shell: /bin/esxcli
-        vm_shell_args: "network vswitch standard portgroup set --portgroup-name='Management Network' --vlan-id={{ item.value.vlan }}"
+        vm_shell_args: "network vswitch standard portgroup set --portgroup-name='Management Network' --vlan-id={{ nested_clusters[item.value.cluster].mgmt_vlan }}"
         vm_shell_env: 
         - "PATH=/bin"
         - "VAR=test"
@@ -213,34 +211,6 @@
         state: present
       with_dict: "{{ nested_hosts }}"
 
-    - name: Add TEP Distributed vSwitch
-      vmware_vswitch:
-        hostname: "{{ item.value.ip }}"
-        username: "{{ nested_host_credentials.user }}"
-        password: "{{ nested_host_credentials.password }}"   
-        validate_certs: False
-        switch: "vSwitch1"
-        nics: "vmnic1"
-        mtu: 1600
-      with_dict: "{{ nested_hosts }}"
-      delegate_to: localhost
-
-    - name: Wait 10 seconds before creating port group
-      pause: seconds=10
-
-    - name: Add TEP Portgroup to all hosts in a cluster
-      vmware_portgroup:
-        hostname: "{{ nested_vcenter.ip }}"
-        username: "{{ nested_vcenter.user }}"
-        password: "{{ nested_vcenter.password }}"
-        validate_certs: False
-        cluster_name: "{{ item.key }}"
-        switch_name: "vSwitch1"
-        portgroup_name: "{{ nested_network_names.tep_pg }}"
-        vlan_id: 0
-      with_dict: "{{ clusters }}"
-      delegate_to: localhost
-      
     - name: Add Management Network VM Portgroup to all hosts in a cluster
       vmware_portgroup:
         hostname: "{{ nested_vcenter.ip }}"
@@ -251,7 +221,7 @@
         switch_name: "vSwitch0"
         portgroup_name: "{{ nested_network_names.main_pg }}"
         vlan_id: 0
-      with_dict: "{{ clusters }}"
+      with_dict: "{{ nested_clusters }}"
       delegate_to: localhost
 
     - name: Add resource pool to vCenter
@@ -265,4 +235,49 @@
         resource_pool: '{{ item.value }}'
         state: present
       with_dict: "{{ resource_pools }}"
+      delegate_to: localhost
+
+    - name: Create VDS
+      vmware_dvswitch:
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
+        validate_certs: false
+        datacenter: "{{ nested_vcenter.datacenter }}"
+        switch: "{{ item.name }}"
+        version: 7.0.0
+        mtu: "{{ item.mtu }}"
+        uplink_quantity: "{{ item.uplink_quantity }}"
+        state: present
+      with_items: "{{ distributed_switches }}"
+      delegate_to: localhost
+      
+    - name: Add Host to dVS
+      vmware_dvs_host:
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
+        validate_certs: false
+        esxi_hostname: "{{ nested_hosts[item.1].ip }}"
+        switch_name: "{{ item.0.name }}"
+        vmnics: "{{ item.0.vmnics }}"
+        state: present
+      with_subelements: 
+        - "{{ distributed_switches }}"
+        - hosts
+      delegate_to: localhost
+
+    - name: Create vlan portgroup
+      vmware_dvs_portgroup:
+        hostname: "{{ nested_vcenter.ip }}"
+        username: "{{ nested_vcenter.user }}"
+        password: "{{ nested_vcenter.password }}"
+        validate_certs: false
+        portgroup_name: "{{ item.name }}"
+        switch_name: "{{ item.switch_name }}"
+        vlan_id: "{{ item.vlan_id }}"
+        num_ports: 8
+        portgroup_type: earlyBinding
+        state: present
+      with_items: "{{ distributed_port_groups }}"
       delegate_to: localhost

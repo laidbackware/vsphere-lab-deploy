@@ -15,13 +15,14 @@
         vmname: "{{ environment_tag }}-{{ item.key }}"
         vcenter_user: "{{ parent_vcenter.user }}" 
         vcenter_passwd: "{{ parent_vcenter.password }}" 
-        cluster: "{{ item.value.parent_cluster }}"
+        cluster: "{{ nested_clusters[item.value.nested_cluster].parent_cluster }}"
         datastore: "{{ parent_vcenter.datastore }}" 
-        vmk_portgroup: "{{ item.value.vmk_portgroup}}" 
-        tep_portgroup: "{{ item.value.tep_portgroup}}" ### Must be attached to port group with MTU of 1600+
-        cpucount: "{{ item.value.cpu }}"
-        memory: "{{ item.value.ram }}"
-        hdd: "{{ item.value.hdd }}"
+        vmnic_physical_portgroup_assignment: "{{ nested_clusters[item.value.nested_cluster].vmnic_physical_portgroup_assignment }}"
+        
+        cpucount: "{{ nested_clusters[item.value.nested_cluster].cpu_cores }}"
+        memory: "{{ nested_clusters[item.value.nested_cluster].ram_in_gb }}"
+        # hdd: "{{ item.value.hdd }}"
+        disk_sizes_in_gb: "{{ nested_clusters[item.value.nested_cluster].disk_sizes_in_gb }}"
         isopath: "ESXI-ISO/custom-esx-{{ vsphere_version }}.iso"
         esxi_version: "{{ vsphere_version }}" 
       with_dict: "{{ nested_hosts }}"
@@ -99,6 +100,17 @@
       retries: 100
       delay: 15
 
+    - name: Remove Nested vESXi CDROM
+      vmware_guest:
+        hostname: "{{ parent_vcenter.ip }}"
+        username: "{{ parent_vcenter.user }}" 
+        password: "{{ parent_vcenter.password }}" 
+        validate_certs: no
+        name: "{{ environment_tag }}-{{ item.key }}"
+        cdrom:
+          type: client
+      with_dict: "{{ nested_hosts }}"
+
     - debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{nested_vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under {{tmp_dir}} and follow vcsa-cli-installer.log "
       when: not vcenter_exists
 
@@ -144,7 +156,7 @@
         enable_ha: False 
         enable_drs: "{{ item.value.drs }}"
         enable_vsan: False
-      with_dict: "{{ clusters }}"
+      with_dict: "{{ nested_clusters }}"
 
   post_tasks:
     - name: Delete the temporary JSON template file
