@@ -38,7 +38,7 @@ nested_hosts:
         gw: 192.168.0.1
         nested_cluster: compute # the nested vcenter cluster, which is defined in the clusters section.
     esx2:
-        ip: 192.168.0.183
+        ip: 192.168.0.183 # This will also be used as the hostname in the nested vCenter
         mask: 255.255.255.0
         gw: 192.168.0.1
         nested_cluster: compute # the nested vcenter cluster, which is defined in the clusters section.
@@ -55,7 +55,7 @@ nested_clusters: # You can add, remove or rename clusters in this section
         vswitch0_port_group_name: net1
         mgmt_vlan: 0 # VLAN ID used to tag VMK0
         cpu_cores: 4 # CPU count
-        ram_in_gb: 16384 # memory
+        ram_in_gb: 16 # memory
         # In order list of disks to assign to the nested host. All will be marked as SSD.
         # Datastore names will be automatically be pre-pended with the hostname. E.g esx1
         # The first disk will be ignored

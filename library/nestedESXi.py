@@ -213,9 +213,10 @@ def create_vm(module, vmName, content, clusterName, datastore, vmnic_physical_po
     cdrom = create_cd_rom(content, datastore, dataStorePath)
     dev_changes.append(cdrom)
 
+    memory_mb = memory * 1024
     config = vim.vm.ConfigSpec(
                               name=vmName,
-                              memoryMB=memory,
+                              memoryMB=memory_mb,
                               numCPUs=CPUs,
                               numCoresPerSocket=CPUs,
                               nestedHVEnabled=True,
