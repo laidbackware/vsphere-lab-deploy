@@ -48,13 +48,10 @@ def connect_to_api(vchost, vc_user, vc_pwd):
     global service_instance
     try:
         service_instance = SmartConnect(host=vchost, user=vc_user, pwd=vc_pwd)
-    except (requests.ConnectionError, ssl.SSLError, ssl_cert_error):
-        try:
-            context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-            context.verify_mode = ssl.CERT_NONE
-            service_instance = SmartConnect(host=vchost, user=vc_user, pwd=vc_pwd, sslContext=context)
-        except Exception as e:
-            raise Exception(e)
+    except (requests.ConnectionError, ssl.SSLError, ssl_cert_error):    
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        context.verify_mode = ssl.CERT_NONE
+        service_instance = SmartConnect(host=vchost, user=vc_user, pwd=vc_pwd, sslContext=context)
     return service_instance.RetrieveContent()
 
 def add_scsi_controller(esxi_version):
@@ -188,7 +185,7 @@ def wait_for_tasks(tasks):
             pcfilter.Destroy()
 
 def create_vm(module, vmName, content, clusterName, datastore, vmnic_physical_portgroup_assignment, CPUs, memory, \
-                                dataStorePath, disk_sizes_in_gb, esxi_version):
+                                dataStorePath, disks, esxi_version):
     datacenter = content.rootFolder.childEntity[0]
     vmfolder = datacenter.vmFolder
     hosts = datacenter.hostFolder.childEntity
@@ -197,22 +194,17 @@ def create_vm(module, vmName, content, clusterName, datastore, vmnic_physical_po
     datastore_path = "[" + datastore + "]" + vmName
     vmx_file = vim.vm.FileInfo(logDirectory=None, snapshotDirectory=None, suspendDirectory=None, vmPathName=datastore_path)
     dev_changes = []
-    # disk_size = 1
-    # new_disk_kb = int(disk_size) * 1024 * 1024 * hdd_size
-    # disk_spec = create_virtual_disk(new_disk_kb, 0, 0, False)
-    #disk_spec2 = create_virtual_disk(new_disk_kb/2, 0, 1, False)
-    #disk_spec3 = create_virtual_disk(new_disk_kb, 0, 2, False)
-
-    for idx, disk in enumerate(disk_sizes_in_gb):
-        if not isinstance(disk, int):
-            module.fail_json(msg='Error adding disks to %s. Disk position %s is not a valid integetr' % (vmName, str(idx)))
-        new_disk_kb = 1024 * 1024 * disk
-        disk_spec = create_virtual_disk(new_disk_kb, 0, 0, False)
-        dev_changes.append(disk_spec)
-        ssdOption = vim.option.OptionValue(key='scsi0:%s.virtualSSD' % idx,value='1')
 
     scsi_spec = add_scsi_controller(esxi_version)
+    dev_changes.append(scsi_spec)
 
+    for idx, disk in enumerate(disks):
+        if not isinstance(disk['size_gb'], int):
+            module.fail_json(msg='Error adding disks to %s. Disk position %s size is not a valid integetr' % (vmName, str(idx)))
+        new_disk_kb = 1024 * 1024 * disk['size_gb']
+        disk_spec = create_virtual_disk(new_disk_kb, 0, idx, False)
+        dev_changes.append(disk_spec)
+        
     for vmnic in vmnic_physical_portgroup_assignment:
         #TODO check that the networks exist
         nic_spec = create_nic(content, vmnic)
@@ -220,8 +212,6 @@ def create_vm(module, vmName, content, clusterName, datastore, vmnic_physical_po
 
     cdrom = create_cd_rom(content, datastore, dataStorePath)
     dev_changes.append(cdrom)
-    dev_changes.append(scsi_spec)
-    
 
     config = vim.vm.ConfigSpec(
                               name=vmName,
@@ -234,8 +224,9 @@ def create_vm(module, vmName, content, clusterName, datastore, vmnic_physical_po
                               version='vmx-11'
                             ) 
     config.deviceChange = dev_changes
-    # ssdOption = vim.option.OptionValue(key='scsi0:0.virtualSSD',value='1')
-    config.extraConfig  = [ssdOption]
+    for idx in range(len(disks)):
+        ssdOption = vim.option.OptionValue(key='scsi0:%s.virtualSSD' % idx,value='1')
+        config.extraConfig  = [ssdOption]
 
     task = vmfolder.CreateVM_Task(config=config, pool=resource_pool)
     wait_for_tasks([task])
@@ -262,8 +253,7 @@ def main():
             cpucount=dict(required=True, type='int'),
             memory=dict(required=True, type='int'),
             isopath=dict(required=True, type='str'),
-            # hdd=dict(required=True, type='int'),
-            disk_sizes_in_gb=dict(required=True, type='list'),
+            disks=dict(required=True, type='list'),
             esxi_version=dict(required=False, type='str', default="6.7")
         ),
         supports_check_mode=True,
@@ -278,7 +268,7 @@ def main():
                                  module.params['vcenter_passwd'])
     except vim.fault.InvalidLogin:
         module.fail_json(msg='exception while connecting to vCenter, login failure, check username and password')
-    except requests.exceptions.ConnectionError:
+    except (requests.exceptions.ConnectionError, OSError):
         module.fail_json(msg='exception while connecting to vCenter, check hostname, FQDN or IP')
     vm = find_virtual_machine(content, module.params['vmname'])
     if vm:
@@ -288,8 +278,8 @@ def main():
         module.exit_json(changed=True, debug_out="Test Debug out, Yasen !!!")
     result = create_vm(module, module.params['vmname'], content, module.params['cluster'], module.params['datastore'],
                                              module.params['vmnic_physical_portgroup_assignment'], module.params['cpucount'], module.params['memory'], 
-                                             module.params['isopath'], module.params['disk_sizes_in_gb'],  
-                                             esxi_version)  # module.params['tep_portgroup'], 
+                                             module.params['isopath'], module.params['disks'],  
+                                             esxi_version) 
     if result != 0:
         module.fail_json(msg='Failed to deploy nested ESXi vm with name {}'.format(module.params['vmname']))
     module.exit_json(changed=True, result=module.params['vmname'] + " created")
