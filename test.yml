@@ -1,0 +1,58 @@
+---
+  - name: Deploy VC and Hosts
+    hosts: localhost
+    gather_facts: False
+    vars:
+      datastores_to_add:
+
+      test_list:
+
+      nested_clusters:
+        compute:
+          nested_hosts_disks:
+            - size_gb: 50
+              
+            - size_gb: 100
+              created_datastore_name: test1
+            - size_gb: 200
+              created_datastore_name: test2
+      hosts:
+        esx1:
+          ip: 1.1.1.1
+          nested_cluster: compute
+    tasks:
+      - name: Build datastores to add
+        set_fact: 
+          test_list: [ "1", "2"
+            ]
+            # "{{ nested_clusters | selectattr('state', 'equalto', 'present')}} "
+
+      - name: Build datastores to add
+        set_fact: 
+          datastores_to_add: >-
+            [{% for disk in nested_clusters[item.value.nested_cluster].nested_hosts_disks  %}
+              {% if "created_datastore_name" in  disk %}
+              {
+                "host": "{{ item.value.ip }}",
+                "datastore_name": "{{disk.created_datastore_name}}",
+                "disk_postition" : "{{ loop.index0 }}"
+              },
+              {% endif %} 
+             
+            {% endfor %}
+            ]
+        with_dict: "{{ hosts }}"
+
+      - name: test
+        debug:
+          msg: "{{ datastores_to_add }}"
+    
+      - name: loop
+        debug:
+          msg: "{{ item }}"
+        with_items: "{{ test_list }}"          
+
+      - name: loop
+        debug:
+          msg: "{{ item }}"
+        with_items: "{{ datastores_to_add }}"

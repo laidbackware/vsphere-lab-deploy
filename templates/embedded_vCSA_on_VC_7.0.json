@@ -10,12 +10,12 @@
                 "All names are case-sensitive. ",
                 "For details and examples, refer to template help, i.e. vcsa-deploy {install|upgrade|migrate} --template-help"
             ],
-            "hostname": "{{ parent_vcenter.ip }}",
-            "username": "{{ parent_vcenter.user }}",
-            "password": "{{ parent_vcenter.password }}",
+            "hostname": "{{ hosting_vcenter.ip }}",
+            "username": "{{ hosting_vcenter.user }}",
+            "password": "{{ hosting_vcenter.password }}",
             "deployment_network": "{{ nested_vcenter.network }}",
             "datacenter": [
-                "{{ parent_vcenter.datacenter }}"
+                "{{ hosting_vcenter.datacenter }}"
             ],
             "datastore": "{{ nested_vcenter.datastore }}",
             "target": [
