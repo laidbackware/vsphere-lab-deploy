@@ -51,7 +51,7 @@ Assuming running from a debian based system.
     `pip install --upgrade pip setuptools`
     `pip install --upgrade git+https://github.com/vmware/vsphere-automation-sdk-python.git`
 - `git clone https://github.com/laidbackware/vsphere-nsx-lab-deploy.git`
-- 
+- If using using the vSphere 7 switch, run `./fix_dvs_for_7.sh` to prevent the module from blocking creation.
 
 Place the ESXi and VCSA ISOs in the directory matching the yaml <br/>
 
